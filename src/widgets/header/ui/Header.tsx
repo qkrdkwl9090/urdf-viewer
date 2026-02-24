@@ -1,5 +1,5 @@
 import { useCallback, type ReactNode } from 'react'
-import { Box, X } from 'lucide-react'
+import { Box, Github, X } from 'lucide-react'
 import { useRobotStore } from '@entities/robot'
 import { useURDFLoader } from '@features/upload-robot'
 import { IconButton } from '@shared/ui'
@@ -48,6 +48,14 @@ export function Header(): ReactNode {
             disabled={isLoading}
           />
         )}
+        <a
+          href="https://github.com/qkrdkwl9090/urdf-viewer"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.githubLink}
+        >
+          <Github size={18} />
+        </a>
       </div>
     </header>
   )
