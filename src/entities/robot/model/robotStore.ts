@@ -1,11 +1,11 @@
 import { create } from 'zustand'
-import type { JointState, LinkState } from '@shared/types'
+import type { JointState, LinkState, URDFRobot } from '@shared/types'
 
 interface RobotState {
   /** 로봇 모델 이름 */
   robotName: string | null
   /** urdf-loader가 반환하는 THREE.Object3D 기반 로봇 객체 */
-  robot: unknown | null
+  robot: URDFRobot | null
   /** 조인트 이름 -> 상태 맵 */
   joints: Map<string, JointState>
   /** 링크 이름 -> 상태 맵 */
@@ -20,7 +20,7 @@ interface RobotActions {
   /** 파싱된 로봇 모델 설정 */
   setRobot: (
     name: string,
-    robot: unknown,
+    robot: URDFRobot,
     joints: Map<string, JointState>,
     links: Map<string, LinkState>,
   ) => void
@@ -71,6 +71,11 @@ export const useRobotStore = create<RobotState & RobotActions>()((set) => ({
           ? value
           : Math.min(Math.max(value, joint.min), joint.max)
 
+      // urdf-loader의 Three.js 객체에 직접 조인트 값 적용
+      if (state.robot) {
+        state.robot.setJointValue(name, clampedValue)
+      }
+
       const nextJoints = new Map(state.joints)
       nextJoints.set(name, { ...joint, value: clampedValue })
       return { joints: nextJoints }
@@ -84,6 +89,11 @@ export const useRobotStore = create<RobotState & RobotActions>()((set) => ({
         const resetValue =
           joint.min <= 0 && joint.max >= 0 ? 0 : joint.min
         nextJoints.set(name, { ...joint, value: resetValue })
+
+        // Three.js 객체에도 리셋 값 적용
+        if (state.robot) {
+          state.robot.setJointValue(name, resetValue)
+        }
       }
       return { joints: nextJoints }
     }),

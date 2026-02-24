@@ -1,3 +1,6 @@
+// urdf-loader의 URDFRobot 타입 re-export
+export type { URDFRobot, URDFJoint, URDFLink } from 'urdf-loader'
+
 // 조인트 타입 (URDF 스펙 기반)
 export type JointType =
   | 'revolute'

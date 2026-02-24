@@ -29,8 +29,26 @@
   letter-spacing: -0.01em;
 }
 
+.separator {
+  width: 1px;
+  height: 16px;
+  background-color: var(--color-border-default);
+  margin: 0 var(--space-1);
+}
+
+.robotName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
 .actions {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+.hiddenInput {
+  display: none;
 }
