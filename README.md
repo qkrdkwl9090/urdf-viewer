@@ -1,73 +1,59 @@
-# React + TypeScript + Vite
+<p align="center">
+  <img src="public/banner.svg" alt="URDF Viewer" width="800" />
+</p>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<p align="center">
+  A browser-based URDF viewer for visualizing and interacting with robot models.<br/>
+  No installation required — just upload and view.
+</p>
 
-Currently, two official plugins are available:
+<p align="center">
+  <a href="https://urdf-viewer-pi.vercel.app/"><strong>https://urdf-viewer-pi.vercel.app</strong></a>
+</p>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+- **URDF & XACRO** — Upload `.urdf` and `.xacro` files with full macro expansion
+- **Mesh Support** — STL and DAE mesh file loading
+- **Real-time Joint Control** — Slider controls for all movable joints with live 3D feedback
+- **3D Viewport** — Orbit, pan, and zoom with mouse controls
+- **Viewer Settings** — Toggle grid, axes helpers, and reset camera/joints
+- **Drag & Drop** — Drop files directly onto the browser to load
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- React 19, TypeScript, Vite
+- Three.js + @react-three/fiber + @react-three/drei
+- urdf-loader (NASA JPL) + xacro-parser
+- Zustand for state management
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Getting Started
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```bash
+# Install dependencies
+bun install
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# Start dev server
+bun run dev
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Build for production
+bun run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Project Structure
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+  app/          — App initialization, global styles
+  shared/       — Reusable UI primitives, utilities, types
+  entities/     — Business entities (robot model, store)
+  features/     — User interaction features (upload, joint control, settings)
+  widgets/      — Composed UI blocks (viewer panel, parameter panel, header)
+  pages/        — Page-level layout
+```
+
+Follows [Feature-Sliced Design](https://feature-sliced.design/) architecture.
+
+## License
+
+MIT

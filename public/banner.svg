@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a0a0b"/>
+      <stop offset="100%" stop-color="#111114"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="200" rx="12" fill="url(#bg)"/>
+
+  <!-- Subtle top glow -->
+  <rect width="800" height="100" rx="12" fill="url(#glow)"/>
+
+  <!-- Border -->
+  <rect x="0.5" y="0.5" width="799" height="199" rx="12" stroke="#2a2a2e" stroke-width="1" fill="none"/>
+
+  <!-- 3D Cube icon (scaled up from favicon) -->
+  <g transform="translate(260, 48) scale(3.2)">
+    <path d="M6 10 L16 4 L26 10 L16 16Z" fill="#3b82f6"/>
+    <path d="M6 10 L16 16 L16 28 L6 22Z" fill="#2563eb"/>
+    <path d="M16 16 L26 10 L26 22 L16 28Z" fill="#1d4ed8"/>
+  </g>
+
+  <!-- "URDF Viewer" text -->
+  <text x="370" y="118" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="42" font-weight="700" fill="#f0f0f0" letter-spacing="-0.5">URDF Viewer</text>
+
+  <!-- Subtitle -->
+  <text x="370" y="148" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="15" fill="#71717a" letter-spacing="0.3">Online Robot Model Visualizer</text>
+</svg>
