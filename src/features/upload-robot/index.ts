@@ -1,2 +1,2 @@
-export { EmptyState } from './ui/EmptyState'
+export { UploadWizard } from './ui/UploadWizard'
 export { useURDFLoader } from './lib/useURDFLoader'

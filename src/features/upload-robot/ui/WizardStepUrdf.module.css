@@ -1,0 +1,77 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  width: 100%;
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-accent-muted);
+  color: var(--color-accent);
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.description {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  max-width: 360px;
+}
+
+.formats {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.formatBadge {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.buttonGroup {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 360px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border-subtle);
+}
+
+.tip {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  max-width: 360px;
+  line-height: 1.5;
+}

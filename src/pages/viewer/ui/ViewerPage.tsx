@@ -3,7 +3,7 @@ import { useRobotStore } from '@entities/robot'
 import { Header } from '@widgets/header'
 import { ViewerCanvas } from '@widgets/viewer-panel'
 import { ParameterPanel } from '@widgets/parameter-panel'
-import { EmptyState } from '@features/upload-robot'
+import { UploadWizard } from '@features/upload-robot'
 import { ErrorBanner } from '@shared/ui'
 import styles from './ViewerPage.module.css'
 
@@ -38,7 +38,7 @@ export function ViewerPage(): ReactNode {
           </div>
         )}
 
-        {!hasRobot && <EmptyState />}
+        {!hasRobot && <UploadWizard />}
       </div>
 
       <div className={styles.panelArea}>

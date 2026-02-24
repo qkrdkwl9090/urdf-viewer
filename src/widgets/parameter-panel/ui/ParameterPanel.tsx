@@ -8,7 +8,7 @@ import { PanelTabs } from './PanelTabs'
 import styles from './ParameterPanel.module.css'
 
 /**
- * 우측 파라미터 패널 — 탭으로 Joints / Settings 전환.
+ * 우측 파라미터 패널 -- 탭으로 Joints / Settings 전환.
  * 패널 접기/펼치기를 지원한다.
  */
 export function ParameterPanel(): ReactNode {
@@ -41,7 +41,7 @@ export function ParameterPanel(): ReactNode {
       {isPanelOpen && (
         <div className={styles.content}>
           <PanelTabs />
-          {/* 활성 탭에 따라 조인트 패널 또는 설정 패널 렌더링 */}
+          {/* 활성 탭에 따라 해당 패널 렌더링 */}
           <div className={styles.tabContent}>
             {activeTab === 'joints' && <JointPanel />}
             {activeTab === 'settings' && <SettingsPanel />}

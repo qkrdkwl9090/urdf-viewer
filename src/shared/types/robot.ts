@@ -30,3 +30,25 @@ export interface LinkState {
 
 /** 업로드된 파일 맵 (파일경로 -> Blob URL) */
 export type FileMap = Map<string, string>
+
+/** URDF에서 참조하는 메시의 해석 상태 */
+export interface MeshReference {
+  /** URDF에 기록된 원본 경로 (e.g., package://robot/meshes/link.stl) */
+  urdfPath: string
+  /** FileMap에서 해석 성공 여부 */
+  resolved: boolean
+  /** 파일 확장자 */
+  extension: string
+}
+
+/** 업로드된 파일 정보 */
+export interface UploadedFileInfo {
+  /** 파일 경로 (webkitRelativePath 또는 name) */
+  path: string
+  /** Blob URL */
+  blobUrl: string
+  /** 파일 크기 (bytes) */
+  size: number
+  /** URDF/XACRO 파일 여부 */
+  isRobotDescription: boolean
+}

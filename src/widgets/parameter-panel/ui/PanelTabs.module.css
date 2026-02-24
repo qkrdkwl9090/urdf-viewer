@@ -34,3 +34,11 @@
   color: var(--color-text-primary);
   border-bottom-color: var(--color-accent);
 }
+
+.warningDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-warning);
+  flex-shrink: 0;
+}

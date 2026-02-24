@@ -18,7 +18,7 @@ const TABS: readonly TabItem[] = [
 
 /**
  * 파라미터 패널 상단의 탭 네비게이션.
- * Joints와 Settings 두 탭을 전환한다.
+ * Joints, Settings 탭을 전환한다.
  */
 export function PanelTabs(): ReactNode {
   const activeTab = useUIStore((s) => s.activeTab)

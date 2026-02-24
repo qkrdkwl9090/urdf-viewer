@@ -9,7 +9,7 @@ import type { URDFRobot } from 'urdf-loader'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js'
 import { Mesh } from 'three'
-import type { FileMap } from '@shared/types'
+import type { FileMap, MeshReference } from '@shared/types'
 
 /** STL 메시에 적용할 기본 재질 */
 const DEFAULT_STL_MATERIAL = new MeshStandardMaterial({
@@ -22,7 +22,7 @@ const DEFAULT_STL_MATERIAL = new MeshStandardMaterial({
  * fileMap의 키들 중에서 주어진 meshUrl에 매칭되는 Blob URL을 찾는다.
  * 여러 전략을 순차적으로 시도한다.
  */
-function resolveMeshUrl(meshUrl: string, fileMap: FileMap): string | null {
+export function resolveMeshUrl(meshUrl: string, fileMap: FileMap): string | null {
   // 1. 정확히 일치
   if (fileMap.has(meshUrl)) return fileMap.get(meshUrl)!
 
@@ -144,4 +144,34 @@ export function parseURDF(urdfContent: string, fileMap: FileMap): URDFRobot {
       err instanceof Error ? err.message : 'Unknown parsing failure'
     throw new Error(`URDF parse error: ${detail}`)
   }
+}
+
+/**
+ * URDF XML에서 참조된 모든 메시 경로를 추출한다.
+ * <visual><geometry><mesh filename="..."/></geometry></visual> 요소를 파싱한다.
+ */
+export function extractMeshReferences(
+  urdfContent: string,
+  fileMap: FileMap,
+): MeshReference[] {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(urdfContent, 'text/xml')
+  // geometry > mesh 요소를 모두 선택 (visual 하위뿐 아니라 collision 포함 가능)
+  const meshElements = doc.querySelectorAll('geometry > mesh')
+
+  const refs: MeshReference[] = []
+  const seen = new Set<string>() // 중복 방지
+
+  for (const mesh of meshElements) {
+    const filename = mesh.getAttribute('filename')
+    if (!filename || seen.has(filename)) continue
+    seen.add(filename)
+
+    const extension = filename.split('.').pop()?.toLowerCase() ?? ''
+    const resolved = resolveMeshUrl(filename, fileMap) !== null
+
+    refs.push({ urdfPath: filename, resolved, extension })
+  }
+
+  return refs
 }

@@ -6,6 +6,7 @@ import {
   readFileAsText,
   parseURDF,
   expandXacro,
+  extractMeshReferences,
 } from '@shared/lib'
 import type {
   FileMap,
@@ -13,7 +14,11 @@ import type {
   JointType,
   LinkState,
   URDFRobot,
+  UploadedFileInfo,
 } from '@shared/types'
+
+/** URDF/XACRO 확장자 판별용 */
+const URDF_EXTENSIONS = ['.urdf', '.xacro'] as const
 
 /**
  * URDFRobot에서 조인트 상태를 추출한다.
@@ -55,57 +60,82 @@ function extractLinkStates(robot: URDFRobot): Map<string, LinkState> {
 }
 
 /**
- * FileMap과 URDF 파일 객체를 받아 로봇을 파싱하고 스토어에 저장하는 내부 함수
+ * File 배열에서 UploadedFileInfo 목록을 생성한다.
  */
-async function loadFromProcessed(
+function buildUploadedFileInfos(
+  files: File[],
   fileMap: FileMap,
-  urdfFileObject: File,
-  setRobot: (
-    name: string,
-    robot: URDFRobot,
-    joints: Map<string, JointState>,
-    links: Map<string, LinkState>,
-  ) => void,
-): Promise<void> {
-  let urdfContent = await readFileAsText(urdfFileObject)
-
-  if (!urdfContent.trim()) {
-    throw new Error('The URDF file is empty.')
-  }
-
-  // XACRO 파일인 경우 URDF로 확장
-  const isXacro = urdfFileObject.name.toLowerCase().endsWith('.xacro')
-  if (isXacro) {
-    urdfContent = await expandXacro(urdfContent, fileMap)
-  }
-
-  // URDF 파싱 + 메시 로딩
-  const robot = parseURDF(urdfContent, fileMap)
-
-  // 조인트/링크 상태 추출
-  const joints = extractJointStates(robot)
-  const links = extractLinkStates(robot)
-
-  // 스토어에 저장
-  setRobot(robot.robotName || 'Unnamed Robot', robot, joints, links)
+): UploadedFileInfo[] {
+  return files.map((file) => {
+    const path = file.webkitRelativePath || file.name
+    const lowerPath = path.toLowerCase()
+    const isRobotDescription = URDF_EXTENSIONS.some((ext) =>
+      lowerPath.endsWith(ext),
+    )
+    return {
+      path,
+      blobUrl: fileMap.get(path) ?? '',
+      size: file.size,
+      isRobotDescription,
+    }
+  })
 }
 
 /**
- * 파일 업로드 -> URDF 파싱 -> 로봇 렌더링까지의 전체 파이프라인을 관리하는 훅
+ * URDF 텍스트를 읽고 XACRO인 경우 확장한다.
  */
-export function useURDFLoader(): {
-  loadRobot: (files: FileList | File[]) => Promise<void>
-  loadRobotFromDrop: (items: DataTransferItemList) => Promise<void>
+async function readAndExpandUrdf(
+  urdfFile: File,
+  fileMap: FileMap,
+): Promise<string> {
+  let content = await readFileAsText(urdfFile)
+  if (!content.trim()) {
+    throw new Error('The URDF file is empty.')
+  }
+  const isXacro = urdfFile.name.toLowerCase().endsWith('.xacro')
+  if (isXacro) {
+    content = await expandXacro(content, fileMap)
+  }
+  return content
+}
+
+interface UseURDFLoaderReturn {
+  /** Step 1: URDF/XACRO 파일 파싱 (로봇 미생성). 모든 메시 해석 시 true 반환 */
+  parseUrdfFile: (files: FileList | File[]) => Promise<boolean>
+  /** Step 1 (드래그 앤 드롭): DataTransferItem에서 URDF 파싱 */
+  parseUrdfFromDrop: (items: DataTransferItemList) => Promise<boolean>
+  /** Step 2: 메시 파일 추가 후 참조 재평가. 모든 메시 해석 시 true 반환 */
+  addMeshFiles: (files: FileList | File[]) => Promise<boolean>
+  /** Step 2 (드래그 앤 드롭): 폴더에서 메시 파일 추가 */
+  addMeshFilesFromDrop: (items: DataTransferItemList) => Promise<boolean>
+  /** 파싱된 URDF + 현재 fileMap으로 로봇 모델 생성 */
+  buildRobot: () => void
+  /** 전체 초기화 */
   clearRobot: () => void
-} {
+}
+
+/**
+ * 2단계 업로드 위자드를 지원하는 파일 업로드/파싱 훅.
+ * Step 1에서 URDF를 파싱하고, Step 2에서 메시를 추가한 뒤,
+ * buildRobot으로 최종 로봇 모델을 생성한다.
+ */
+export function useURDFLoader(): UseURDFLoaderReturn {
   const setRobot = useRobotStore((s) => s.setRobot)
   const setLoading = useRobotStore((s) => s.setLoading)
   const setError = useRobotStore((s) => s.setError)
-  const clearRobot = useRobotStore((s) => s.clearRobot)
+  const clearRobotAction = useRobotStore((s) => s.clearRobot)
+  const setFileData = useRobotStore((s) => s.setFileData)
+  const mergeFileMap = useRobotStore((s) => s.mergeFileMap)
+  const setMeshReferences = useRobotStore((s) => s.setMeshReferences)
+  const setUrdfContent = useRobotStore((s) => s.setUrdfContent)
 
-  /** FileList 또는 File[] 기반 로딩 (input[type=file]에서 사용) */
-  const loadRobot = useCallback(
-    async (files: FileList | File[]) => {
+  /**
+   * Step 1: URDF/XACRO 파일을 파싱하고 메시 참조를 추출한다.
+   * 로봇 Three.js 모델은 아직 생성하지 않는다.
+   * @returns 모든 메시가 해석되었으면 true
+   */
+  const parseUrdfFile = useCallback(
+    async (files: FileList | File[]): Promise<boolean> => {
       setLoading(true)
       setError(null)
 
@@ -118,20 +148,38 @@ export function useURDFLoader(): {
           )
         }
 
-        await loadFromProcessed(fileMap, urdfFileObject, setRobot)
+        const urdfContent = await readAndExpandUrdf(urdfFileObject, fileMap)
+
+        // 파일 데이터를 스토어에 저장
+        const uploadedFileInfos = buildUploadedFileInfos(
+          Array.from(files),
+          fileMap,
+        )
+        setFileData(fileMap, uploadedFileInfos)
+        setUrdfContent(urdfContent)
+
+        // 메시 참조 상태 추출
+        const meshRefs = extractMeshReferences(urdfContent, fileMap)
+        setMeshReferences(meshRefs)
+
+        setLoading(false)
+        return meshRefs.every((ref) => ref.resolved)
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : 'Failed to load robot model'
+          err instanceof Error ? err.message : 'Failed to parse URDF file'
         setError(message)
-        console.error('URDF loading error:', err)
+        return false
       }
     },
-    [setRobot, setLoading, setError],
+    [setLoading, setError, setFileData, setUrdfContent, setMeshReferences],
   )
 
-  /** DataTransferItemList 기반 로딩 (드래그 앤 드롭에서 사용) */
-  const loadRobotFromDrop = useCallback(
-    async (items: DataTransferItemList) => {
+  /**
+   * Step 1 (드래그 앤 드롭): DataTransferItemList에서 URDF를 파싱한다.
+   * 폴더 구조를 재귀 탐색하여 모든 파일을 수집한다.
+   */
+  const parseUrdfFromDrop = useCallback(
+    async (items: DataTransferItemList): Promise<boolean> => {
       setLoading(true)
       setError(null)
 
@@ -145,16 +193,187 @@ export function useURDFLoader(): {
           )
         }
 
-        await loadFromProcessed(fileMap, urdfFileObject, setRobot)
+        const urdfContent = await readAndExpandUrdf(urdfFileObject, fileMap)
+
+        // DataTransfer에서는 정확한 파일 크기를 알 수 없음
+        const uploadedFileInfos: UploadedFileInfo[] = []
+        for (const [path, blobUrl] of fileMap) {
+          const lowerPath = path.toLowerCase()
+          const isRobotDescription = URDF_EXTENSIONS.some((ext) =>
+            lowerPath.endsWith(ext),
+          )
+          uploadedFileInfos.push({
+            path,
+            blobUrl,
+            size: 0,
+            isRobotDescription,
+          })
+        }
+
+        setFileData(fileMap, uploadedFileInfos)
+        setUrdfContent(urdfContent)
+
+        const meshRefs = extractMeshReferences(urdfContent, fileMap)
+        setMeshReferences(meshRefs)
+
+        setLoading(false)
+        return meshRefs.every((ref) => ref.resolved)
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : 'Failed to load robot model'
+          err instanceof Error ? err.message : 'Failed to parse URDF file'
         setError(message)
-        console.error('URDF loading error:', err)
+        return false
       }
     },
-    [setRobot, setLoading, setError],
+    [setLoading, setError, setFileData, setUrdfContent, setMeshReferences],
   )
 
-  return { loadRobot, loadRobotFromDrop, clearRobot }
+  /**
+   * Step 2: 메시 파일을 추가하고 참조를 재평가한다.
+   * 로봇 모델은 아직 생성하지 않는다.
+   * @returns 모든 메시가 해석되었으면 true
+   */
+  const addMeshFiles = useCallback(
+    async (files: FileList | File[]): Promise<boolean> => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const { fileMap: newFileMap } = await processFiles(files)
+        const newFileInfos = buildUploadedFileInfos(
+          Array.from(files),
+          newFileMap,
+        )
+        mergeFileMap(newFileMap, newFileInfos)
+
+        // 병합된 fileMap으로 메시 참조 재평가
+        const state = useRobotStore.getState()
+        const currentUrdfContent = state.urdfContent
+
+        if (!currentUrdfContent) {
+          setLoading(false)
+          return false
+        }
+
+        const mergedFileMap = new Map(state.fileMap)
+        for (const [key, value] of newFileMap) {
+          mergedFileMap.set(key, value)
+        }
+
+        const meshRefs = extractMeshReferences(
+          currentUrdfContent,
+          mergedFileMap,
+        )
+        setMeshReferences(meshRefs)
+
+        setLoading(false)
+        return meshRefs.every((ref) => ref.resolved)
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to add mesh files'
+        setError(message)
+        return false
+      }
+    },
+    [setLoading, setError, mergeFileMap, setMeshReferences],
+  )
+
+  /**
+   * Step 2 (드래그 앤 드롭): DataTransferItemList에서 메시 파일을 추가한다.
+   * 폴더 드롭 시 재귀 탐색하여 메시 파일을 수집한다.
+   */
+  const addMeshFilesFromDrop = useCallback(
+    async (items: DataTransferItemList): Promise<boolean> => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const { fileMap: newFileMap } = await processDataTransferItems(items)
+
+        // DataTransfer에서는 File 객체에 접근 불가하므로 fileMap 기반으로 info 생성
+        const newFileInfos: UploadedFileInfo[] = []
+        for (const [path, blobUrl] of newFileMap) {
+          const lowerPath = path.toLowerCase()
+          const isRobotDescription = URDF_EXTENSIONS.some((ext) =>
+            lowerPath.endsWith(ext),
+          )
+          newFileInfos.push({
+            path,
+            blobUrl,
+            size: 0,
+            isRobotDescription,
+          })
+        }
+
+        mergeFileMap(newFileMap, newFileInfos)
+
+        // 병합된 fileMap으로 메시 참조 재평가
+        const state = useRobotStore.getState()
+        const currentUrdfContent = state.urdfContent
+
+        if (!currentUrdfContent) {
+          setLoading(false)
+          return false
+        }
+
+        const mergedFileMap = new Map(state.fileMap)
+        for (const [key, value] of newFileMap) {
+          mergedFileMap.set(key, value)
+        }
+
+        const meshRefs = extractMeshReferences(
+          currentUrdfContent,
+          mergedFileMap,
+        )
+        setMeshReferences(meshRefs)
+
+        setLoading(false)
+        return meshRefs.every((ref) => ref.resolved)
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to add mesh files'
+        setError(message)
+        return false
+      }
+    },
+    [setLoading, setError, mergeFileMap, setMeshReferences],
+  )
+
+  /**
+   * 파싱된 URDF 텍스트와 현재 fileMap으로 Three.js 로봇 모델을 생성한다.
+   * Step 2 완료 후 또는 모든 메시가 해석된 경우 호출한다.
+   */
+  const buildRobot = useCallback(() => {
+    const state = useRobotStore.getState()
+    const { urdfContent, fileMap } = state
+
+    if (!urdfContent) return
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const robot = parseURDF(urdfContent, fileMap)
+      const joints = extractJointStates(robot)
+      const links = extractLinkStates(robot)
+      setRobot(robot.robotName || 'Unnamed Robot', robot, joints, links)
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to build robot model'
+      setError(message)
+    }
+  }, [setRobot, setLoading, setError])
+
+  const clearRobot = useCallback(() => {
+    clearRobotAction()
+  }, [clearRobotAction])
+
+  return {
+    parseUrdfFile,
+    parseUrdfFromDrop,
+    addMeshFiles,
+    addMeshFilesFromDrop,
+    buildRobot,
+    clearRobot,
+  }
 }

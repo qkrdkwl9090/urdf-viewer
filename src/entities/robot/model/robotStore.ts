@@ -1,5 +1,12 @@
 import { create } from 'zustand'
-import type { JointState, LinkState, URDFRobot } from '@shared/types'
+import type {
+  JointState,
+  LinkState,
+  URDFRobot,
+  FileMap,
+  UploadedFileInfo,
+  MeshReference,
+} from '@shared/types'
 
 interface RobotState {
   /** 로봇 모델 이름 */
@@ -14,6 +21,14 @@ interface RobotState {
   isLoading: boolean
   /** 에러 메시지 */
   error: string | null
+  /** 업로드된 파일 맵 (경로 -> Blob URL) — 메시 추가 시 병합용 */
+  fileMap: FileMap
+  /** 업로드된 파일 목록 */
+  uploadedFiles: UploadedFileInfo[]
+  /** URDF에서 참조하는 모든 메시의 해석 상태 */
+  meshReferences: MeshReference[]
+  /** URDF 원본 텍스트 (재파싱용) */
+  urdfContent: string | null
 }
 
 interface RobotActions {
@@ -36,6 +51,16 @@ interface RobotActions {
   setLoading: (v: boolean) => void
   /** 에러 메시지 설정 */
   setError: (e: string | null) => void
+  /** 파일 맵 및 업로드 파일 정보 설정 */
+  setFileData: (fileMap: FileMap, uploadedFiles: UploadedFileInfo[]) => void
+  /** 기존 FileMap에 새 파일 병합 */
+  mergeFileMap: (newFiles: FileMap, newFileInfos: UploadedFileInfo[]) => void
+  /** 메시 참조 목록 설정 */
+  setMeshReferences: (refs: MeshReference[]) => void
+  /** URDF 원본 텍스트 저장 */
+  setUrdfContent: (content: string) => void
+  /** 개별 파일 제거 (경로 기반) */
+  removeFile: (path: string) => void
 }
 
 const initialState: RobotState = {
@@ -45,6 +70,10 @@ const initialState: RobotState = {
   links: new Map(),
   isLoading: false,
   error: null,
+  fileMap: new Map(),
+  uploadedFiles: [],
+  meshReferences: [],
+  urdfContent: null,
 }
 
 export const useRobotStore = create<RobotState & RobotActions>()((set) => ({
@@ -108,11 +137,52 @@ export const useRobotStore = create<RobotState & RobotActions>()((set) => ({
       return { links: nextLinks }
     }),
 
-  // TODO: Blob URL 메모리 누수 방지 — clearRobot 시 fileMap의 모든 blob URL을
-  // URL.revokeObjectURL()로 해제해야 한다. MVP 이후 최적화 대상.
-  clearRobot: () => set(initialState),
+  clearRobot: () =>
+    set((state) => {
+      // Blob URL 메모리 해제
+      for (const blobUrl of state.fileMap.values()) {
+        URL.revokeObjectURL(blobUrl)
+      }
+      return { ...initialState }
+    }),
 
   setLoading: (v) => set({ isLoading: v }),
 
   setError: (e) => set({ error: e, isLoading: false }),
+
+  setFileData: (fileMap, uploadedFiles) =>
+    set({ fileMap, uploadedFiles }),
+
+  mergeFileMap: (newFiles, newFileInfos) =>
+    set((state) => {
+      // 기존 FileMap에 새 파일을 병합
+      const nextFileMap = new Map(state.fileMap)
+      for (const [key, value] of newFiles) {
+        nextFileMap.set(key, value)
+      }
+
+      // 기존 파일 목록에 새 파일 정보 추가 (중복 경로는 덮어쓰기)
+      const existingPaths = new Set(state.uploadedFiles.map((f) => f.path))
+      const deduped = newFileInfos.filter((f) => !existingPaths.has(f.path))
+      const nextUploadedFiles = [...state.uploadedFiles, ...deduped]
+
+      return { fileMap: nextFileMap, uploadedFiles: nextUploadedFiles }
+    }),
+
+  setMeshReferences: (refs) => set({ meshReferences: refs }),
+
+  setUrdfContent: (content) => set({ urdfContent: content }),
+
+  removeFile: (path) =>
+    set((state) => {
+      const blobUrl = state.fileMap.get(path)
+      if (blobUrl) URL.revokeObjectURL(blobUrl)
+
+      const nextFileMap = new Map(state.fileMap)
+      nextFileMap.delete(path)
+
+      const nextUploadedFiles = state.uploadedFiles.filter((f) => f.path !== path)
+
+      return { fileMap: nextFileMap, uploadedFiles: nextUploadedFiles }
+    }),
 }))
