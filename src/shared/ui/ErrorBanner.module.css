@@ -1,0 +1,61 @@
+/* 슬라이드인 애니메이션 */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid var(--color-error);
+  border-radius: var(--radius-md);
+  animation: slideIn var(--transition-normal) forwards;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--color-error);
+  display: flex;
+  align-items: center;
+  /* 아이콘을 텍스트 첫 줄 중앙에 정렬 */
+  margin-top: 1px;
+}
+
+.message {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  word-break: break-word;
+}
+
+.dismiss {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.dismiss:hover {
+  color: var(--color-text-primary);
+  background-color: rgba(255, 255, 255, 0.06);
+}

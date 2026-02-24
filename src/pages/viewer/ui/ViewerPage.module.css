@@ -22,6 +22,16 @@
   min-width: 0;
 }
 
+.errorContainer {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  right: var(--space-3);
+  /* 캔버스 위, EmptyState 아래 */
+  z-index: 1;
+  pointer-events: auto;
+}
+
 .panelArea {
   grid-area: panel;
 }

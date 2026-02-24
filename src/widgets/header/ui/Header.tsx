@@ -10,6 +10,7 @@ const FILE_ACCEPT = '.urdf,.xacro,.stl,.dae,.obj'
 
 export function Header(): ReactNode {
   const robotName = useRobotStore((s) => s.robotName)
+  const isLoading = useRobotStore((s) => s.isLoading)
   const { loadRobot, clearRobot } = useURDFLoader()
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -37,8 +38,11 @@ export function Header(): ReactNode {
         </span>
         <span className={styles.brandTitle}>URDF Viewer</span>
 
+        {/* 로딩 중 표시 — 타이틀 옆에 펄싱 도트 */}
+        {isLoading && <span className={styles.loadingDot} />}
+
         {/* 로봇이 로드되면 이름을 표시 */}
-        {robotName && (
+        {robotName && !isLoading && (
           <>
             <span className={styles.separator} />
             <span className={styles.robotName}>{robotName}</span>
@@ -53,12 +57,16 @@ export function Header(): ReactNode {
             tooltip="Clear robot"
             size="sm"
             onClick={handleClear}
+            disabled={isLoading}
           />
         )}
 
-        <Button onClick={() => fileInputRef.current?.click()}>
+        <Button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isLoading}
+        >
           <Upload size={14} />
-          Upload URDF
+          {isLoading ? 'Loading...' : 'Upload URDF'}
         </Button>
 
         <input

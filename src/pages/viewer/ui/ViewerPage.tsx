@@ -4,6 +4,7 @@ import { Header } from '@widgets/header'
 import { ViewerCanvas } from '@widgets/viewer-panel'
 import { ParameterPanel } from '@widgets/parameter-panel'
 import { EmptyState } from '@features/upload-robot'
+import { ErrorBanner } from '@shared/ui'
 import styles from './ViewerPage.module.css'
 
 /**
@@ -12,6 +13,9 @@ import styles from './ViewerPage.module.css'
  */
 export function ViewerPage(): ReactNode {
   const robotName = useRobotStore((s) => s.robotName)
+  const error = useRobotStore((s) => s.error)
+  const setError = useRobotStore((s) => s.setError)
+
   // 로봇이 로드되지 않았으면 EmptyState 오버레이 표시
   const hasRobot = robotName !== null
 
@@ -23,6 +27,17 @@ export function ViewerPage(): ReactNode {
 
       <div className={styles.viewportArea}>
         <ViewerCanvas />
+
+        {/* 에러 배너 — 뷰포트 상단에 오버레이로 표시 */}
+        {error && hasRobot && (
+          <div className={styles.errorContainer}>
+            <ErrorBanner
+              message={error}
+              onDismiss={() => setError(null)}
+            />
+          </div>
+        )}
+
         {!hasRobot && <EmptyState />}
       </div>
 

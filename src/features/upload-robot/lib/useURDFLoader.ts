@@ -5,6 +5,7 @@ import {
   processDataTransferItems,
   readFileAsText,
   parseURDF,
+  expandXacro,
 } from '@shared/lib'
 import type {
   FileMap,
@@ -66,10 +67,16 @@ async function loadFromProcessed(
     links: Map<string, LinkState>,
   ) => void,
 ): Promise<void> {
-  const urdfContent = await readFileAsText(urdfFileObject)
+  let urdfContent = await readFileAsText(urdfFileObject)
 
   if (!urdfContent.trim()) {
     throw new Error('The URDF file is empty.')
+  }
+
+  // XACRO 파일인 경우 URDF로 확장
+  const isXacro = urdfFileObject.name.toLowerCase().endsWith('.xacro')
+  if (isXacro) {
+    urdfContent = await expandXacro(urdfContent, fileMap)
   }
 
   // URDF 파싱 + 메시 로딩

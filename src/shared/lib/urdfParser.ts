@@ -136,5 +136,12 @@ export function parseURDF(urdfContent: string, fileMap: FileMap): URDFRobot {
     }
   }
 
-  return loader.parse(urdfContent)
+  try {
+    return loader.parse(urdfContent)
+  } catch (err: unknown) {
+    // urdf-loader의 파싱 에러를 사용자 친화적 메시지로 래핑
+    const detail =
+      err instanceof Error ? err.message : 'Unknown parsing failure'
+    throw new Error(`URDF parse error: ${detail}`)
+  }
 }

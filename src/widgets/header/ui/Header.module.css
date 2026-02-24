@@ -43,6 +43,27 @@
   font-family: var(--font-mono);
 }
 
+/* 로딩 펄스 애니메이션 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.loadingDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-accent);
+  animation: pulse 1.2s ease-in-out infinite;
+  margin-left: var(--space-1);
+}
+
 .actions {
   display: flex;
   align-items: center;

@@ -108,6 +108,8 @@ export const useRobotStore = create<RobotState & RobotActions>()((set) => ({
       return { links: nextLinks }
     }),
 
+  // TODO: Blob URL 메모리 누수 방지 — clearRobot 시 fileMap의 모든 blob URL을
+  // URL.revokeObjectURL()로 해제해야 한다. MVP 이후 최적화 대상.
   clearRobot: () => set(initialState),
 
   setLoading: (v) => set({ isLoading: v }),
