@@ -77,5 +77,6 @@ export function RobotModel(): ReactNode {
 
   if (!robot) return null
 
-  return <primitive object={robot} />
+  // URDF/ROS는 Z-up, Three.js는 Y-up이므로 X축 -90도 회전
+  return <primitive object={robot} rotation={[-Math.PI / 2, 0, 0]} />
 }
