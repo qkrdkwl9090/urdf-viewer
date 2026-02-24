@@ -1,16 +1,17 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useCallback, type ReactNode } from 'react'
 import { useThree } from '@react-three/fiber'
 import { Box3, Vector3 } from 'three'
-import { useRobotStore } from '@entities/robot'
+import { useRobotStore, useViewerStore } from '@entities/robot'
 import type { URDFRobot } from '@shared/types'
 
 /**
- * 로봇 모델이 로드된 후 카메라를 바운딩 박스에 맞춰 자동 위치시킨다.
+ * 카메라를 로봇의 바운딩 박스에 맞춰 자동 위치시키는 함수를 반환한다.
+ * 로봇 로드 시와 카메라 리셋 요청 시 모두 사용된다.
  */
-function useAutoFrame(robot: URDFRobot | null): void {
+function useAutoFrame(robot: URDFRobot | null): () => void {
   const { camera } = useThree()
 
-  useEffect(() => {
+  const frameCamera = useCallback(() => {
     if (!robot) return
 
     // 바운딩 박스 계산
@@ -36,6 +37,28 @@ function useAutoFrame(robot: URDFRobot | null): void {
     camera.lookAt(center)
     camera.updateProjectionMatrix()
   }, [robot, camera])
+
+  // 로봇 로드 시 자동 프레이밍
+  useEffect(() => {
+    frameCamera()
+  }, [frameCamera])
+
+  return frameCamera
+}
+
+/**
+ * 카메라 리셋 요청을 감지해 자동 프레이밍을 다시 실행한다.
+ */
+function useCameraReset(frameCamera: () => void): void {
+  const shouldResetCamera = useViewerStore((s) => s.shouldResetCamera)
+  const clearCameraReset = useViewerStore((s) => s.clearCameraReset)
+
+  useEffect(() => {
+    if (!shouldResetCamera) return
+
+    frameCamera()
+    clearCameraReset()
+  }, [shouldResetCamera, frameCamera, clearCameraReset])
 }
 
 /**
@@ -47,7 +70,10 @@ export function RobotModel(): ReactNode {
   const robot = useRobotStore((s) => s.robot)
 
   // 로봇 로드 시 카메라 자동 프레이밍
-  useAutoFrame(robot)
+  const frameCamera = useAutoFrame(robot)
+
+  // 카메라 리셋 요청 처리
+  useCameraReset(frameCamera)
 
   if (!robot) return null
 
