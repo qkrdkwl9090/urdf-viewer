@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run *)",
+      "Bash(bun add *)",
+      "Bash(bun remove *)",
+      "Bash(bunx *)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git branch*)",
+      "Read(src/**)",
+      "Read(public/**)",
+      "Read(package.json)",
+      "Read(tsconfig*.json)",
+      "Read(vite.config.ts)",
+      "Read(index.html)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Read(.env*)"
+    ]
+  }
+}
