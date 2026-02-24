@@ -1,0 +1,91 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 3D 캔버스 위에 반투명 오버레이 */
+  background-color: rgba(10, 10, 11, 0.8);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  /* 캔버스 인터랙션을 허용하되, 업로드 영역은 클릭 가능 */
+  pointer-events: none;
+  z-index: 2;
+}
+
+.uploadZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-12) var(--space-10);
+  border: 2px dashed var(--color-border-default);
+  border-radius: var(--radius-xl);
+  max-width: 460px;
+  text-align: center;
+  transition:
+    border-color var(--transition-normal),
+    background-color var(--transition-normal);
+  /* 업로드 영역만 클릭 가능 */
+  pointer-events: auto;
+}
+
+.uploadZone:hover {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent-muted);
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: var(--color-accent-muted);
+  color: var(--color-accent);
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.formats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.formatLabel {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.formatBadge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.tip {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  max-width: 340px;
+  line-height: 1.5;
+}

@@ -1,0 +1,27 @@
+.layout {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-rows: var(--header-height) 1fr;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'header  header'
+    'viewport panel';
+  overflow: hidden;
+}
+
+.headerArea {
+  grid-area: header;
+}
+
+.viewportArea {
+  grid-area: viewport;
+  position: relative;
+  overflow: hidden;
+  /* 패널이 접히거나 펼쳐질 때 부드러운 리사이즈 */
+  min-width: 0;
+}
+
+.panelArea {
+  grid-area: panel;
+}

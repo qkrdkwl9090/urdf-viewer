@@ -1,9 +1,5 @@
-function App() {
-  return (
-    <div>
-      <h1>URDF Viewer</h1>
-    </div>
-  )
-}
+import { ViewerPage } from '@pages/viewer'
 
-export default App
+export default function App() {
+  return <ViewerPage />
+}
