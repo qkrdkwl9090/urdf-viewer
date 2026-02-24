@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <!-- Isometric 3D cube -->
+  <!-- Top face -->
+  <path d="M6 10 L16 4 L26 10 L16 16Z" fill="#3b82f6"/>
+  <!-- Left face -->
+  <path d="M6 10 L16 16 L16 28 L6 22Z" fill="#2563eb"/>
+  <!-- Right face -->
+  <path d="M16 16 L26 10 L26 22 L16 28Z" fill="#1d4ed8"/>
+</svg>
