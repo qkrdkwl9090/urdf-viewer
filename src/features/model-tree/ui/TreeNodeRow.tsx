@@ -1,6 +1,6 @@
 import { useState, useCallback, type ReactNode } from 'react'
 import { ChevronRight, Box, Waypoints, Eye, EyeOff } from 'lucide-react'
-import { useRobotStore } from '@entities/robot'
+import { useRobotStore, useUIStore } from '@entities/robot'
 import { Badge, Tooltip } from '@shared/ui'
 import type { TreeNode } from '../lib/buildTree'
 import styles from './TreeNodeRow.module.css'
@@ -85,7 +85,10 @@ function LinkNodeTooltip({ node }: { node: TreeNode }): ReactNode {
 export function TreeNodeRow({ node, depth }: TreeNodeRowProps): ReactNode {
   const [isExpanded, setIsExpanded] = useState(depth < 2)
   const toggleLinkVisibility = useRobotStore((s) => s.toggleLinkVisibility)
+  const selectedItem = useUIStore((s) => s.selectedItem)
+  const selectItem = useUIStore((s) => s.selectItem)
   const hasChildren = node.children.length > 0
+  const isSelected = selectedItem?.name === node.id && selectedItem?.kind === node.kind
 
   const handleToggle = useCallback(() => {
     setIsExpanded((prev) => !prev)
@@ -114,6 +117,18 @@ export function TreeNodeRow({ node, depth }: TreeNodeRowProps): ReactNode {
     node.kind === 'link' ? styles.iconLink : styles.iconJoint,
   ].join(' ')
 
+  const handleRowClick = useCallback(() => {
+    selectItem({ name: node.id, kind: node.kind })
+    if (hasChildren) {
+      setIsExpanded((prev) => !prev)
+    }
+  }, [selectItem, node.id, node.kind, hasChildren])
+
+  const rowClass = [
+    styles.row,
+    isSelected ? styles.rowSelected : '',
+  ].filter(Boolean).join(' ')
+
   const tooltipContent =
     node.kind === 'joint'
       ? <JointNodeTooltip node={node} />
@@ -123,9 +138,9 @@ export function TreeNodeRow({ node, depth }: TreeNodeRowProps): ReactNode {
     <div className={styles.nodeGroup}>
       <Tooltip content={tooltipContent} position="right">
         <div
-          className={styles.row}
+          className={rowClass}
           style={{ paddingLeft: `${String(depth * 16 + 8)}px` }}
-          onClick={hasChildren ? handleToggle : undefined}
+          onClick={handleRowClick}
         >
           {/* 접기/펴기 — row에도 onClick이 있으므로 버블링 방지 */}
           <button

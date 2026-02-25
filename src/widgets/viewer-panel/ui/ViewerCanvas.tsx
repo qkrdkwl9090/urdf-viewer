@@ -1,6 +1,6 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useCallback, type ReactNode } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { useViewerStore } from '@entities/robot'
+import { useViewerStore, useUIStore } from '@entities/robot'
 import {
   DEFAULT_CAMERA_FOV,
   DEFAULT_CAMERA_POSITION,
@@ -14,6 +14,12 @@ import styles from './ViewerCanvas.module.css'
  */
 export function ViewerCanvas(): ReactNode {
   const backgroundColor = useViewerStore((s) => s.backgroundColor)
+  const clearSelection = useUIStore((s) => s.clearSelection)
+
+  // 빈 공간 클릭 시 선택 해제
+  const handlePointerMissed = useCallback(() => {
+    clearSelection()
+  }, [clearSelection])
 
   // 카메라 초기 설정 — Canvas가 재마운트되지 않도록 memo 처리
   const cameraConfig = useMemo(
@@ -35,6 +41,7 @@ export function ViewerCanvas(): ReactNode {
       <Canvas
         camera={cameraConfig}
         gl={{ antialias: true, alpha: false }}
+        onPointerMissed={handlePointerMissed}
         onCreated={({ gl }) => {
           gl.setClearColor(backgroundColor)
         }}

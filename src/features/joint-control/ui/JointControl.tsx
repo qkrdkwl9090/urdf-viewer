@@ -76,6 +76,9 @@ function JointTooltipContent({ joint }: { joint: JointState }): ReactNode {
 export function JointControl({ joint }: JointControlProps): ReactNode {
   const angleUnit = useUIStore((s) => s.angleUnit)
   const ignoreLimits = useUIStore((s) => s.ignoreLimits)
+  const selectedItem = useUIStore((s) => s.selectedItem)
+  const selectItem = useUIStore((s) => s.selectItem)
+  const robot = useRobotStore((s) => s.robot)
   const isPrismatic = joint.type === 'prismatic'
   const useDeg = !isPrismatic && angleUnit === 'deg'
 
@@ -93,6 +96,25 @@ export function JointControl({ joint }: JointControlProps): ReactNode {
   const displayMin = useDeg ? effectiveMin * RAD_TO_DEG : effectiveMin
   const displayMax = useDeg ? effectiveMax * RAD_TO_DEG : effectiveMax
 
+  // 조인트 선택 여부 — 직접 선택 or 자식 링크가 선택된 경우
+  const isSelected = useMemo(() => {
+    if (!selectedItem || !robot) return false
+    if (selectedItem.kind === 'joint' && selectedItem.name === joint.name) return true
+    if (selectedItem.kind === 'link') {
+      const urdfJoint = robot.joints[joint.name]
+      if (!urdfJoint) return false
+      const childLink = urdfJoint.children.find(
+        (c) => 'isURDFLink' in c && (c as unknown as { isURDFLink: boolean }).isURDFLink,
+      )
+      if (childLink && (childLink as unknown as { urdfName: string }).urdfName === selectedItem.name) return true
+    }
+    return false
+  }, [selectedItem, robot, joint.name])
+
+  const handleSelect = useCallback(() => {
+    selectItem({ name: joint.name, kind: 'joint' })
+  }, [selectItem, joint.name])
+
   // 입력값을 라디안으로 변환 후 스토어에 저장
   const handleChange = useCallback(
     (value: number) => {
@@ -104,8 +126,8 @@ export function JointControl({ joint }: JointControlProps): ReactNode {
 
   return (
     <Tooltip content={<JointTooltipContent joint={joint} />} position="left">
-      <div className={styles.row}>
-        <div className={styles.header}>
+      <div className={[styles.row, isSelected ? styles.rowSelected : ''].filter(Boolean).join(' ')}>
+        <div className={styles.header} onClick={handleSelect} style={{ cursor: 'pointer' }}>
           <span className={styles.name} title={joint.name}>
             {joint.name}
           </span>

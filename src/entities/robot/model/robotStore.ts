@@ -156,6 +156,8 @@ export const useRobotStore = create<RobotState & RobotActions>()((set) => ({
       for (const blobUrl of state.fileMap.values()) {
         URL.revokeObjectURL(blobUrl)
       }
+      // 선택 상태 초기화
+      useUIStore.getState().clearSelection()
       return { ...initialState }
     }),
 

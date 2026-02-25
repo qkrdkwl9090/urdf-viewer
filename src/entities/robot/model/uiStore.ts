@@ -3,6 +3,12 @@ import { create } from 'zustand'
 type ActiveTab = 'joints' | 'model' | 'settings'
 type AngleUnit = 'rad' | 'deg'
 
+/** 선택 가능한 항목 — 링크 또는 조인트 */
+export interface SelectedItem {
+  name: string
+  kind: 'link' | 'joint'
+}
+
 interface UIState {
   /** 파라미터 패널 열림/닫힘 */
   isPanelOpen: boolean
@@ -14,6 +20,8 @@ interface UIState {
   ignoreLimits: boolean
   /** 단축키 도움말 모달 표시 여부 */
   showShortcuts: boolean
+  /** 현재 선택된 항목 */
+  selectedItem: SelectedItem | null
 }
 
 interface UIActions {
@@ -25,6 +33,10 @@ interface UIActions {
   toggleIgnoreLimits: () => void
   toggleShortcuts: () => void
   closeShortcuts: () => void
+  /** 항목 선택 — 같은 항목 재클릭 시 해제 (토글) */
+  selectItem: (item: SelectedItem) => void
+  /** 선택 해제 */
+  clearSelection: () => void
 }
 
 export const useUIStore = create<UIState & UIActions>()((set) => ({
@@ -33,6 +45,7 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
   angleUnit: 'rad',
   ignoreLimits: false,
   showShortcuts: false,
+  selectedItem: null,
 
   togglePanel: () => set((state) => ({ isPanelOpen: !state.isPanelOpen })),
 
@@ -52,4 +65,14 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
     set((state) => ({ showShortcuts: !state.showShortcuts })),
 
   closeShortcuts: () => set({ showShortcuts: false }),
+
+  selectItem: (item) =>
+    set((state) => ({
+      selectedItem:
+        state.selectedItem?.name === item.name && state.selectedItem?.kind === item.kind
+          ? null
+          : item,
+    })),
+
+  clearSelection: () => set({ selectedItem: null }),
 }))
