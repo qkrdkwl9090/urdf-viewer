@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
-import { useRobotStore } from '@entities/robot'
+import { useRobotStore, useUIStore } from '@entities/robot'
+import { useKeyboardShortcuts } from '@shared/lib'
 import { Header } from '@widgets/header'
 import { ViewerCanvas } from '@widgets/viewer-panel'
 import { ParameterPanel } from '@widgets/parameter-panel'
 import { UploadWizard } from '@features/upload-robot'
-import { ErrorBanner } from '@shared/ui'
+import { ErrorBanner, ShortcutsModal } from '@shared/ui'
 import styles from './ViewerPage.module.css'
 
 /**
@@ -15,6 +16,11 @@ export function ViewerPage(): ReactNode {
   const robotName = useRobotStore((s) => s.robotName)
   const error = useRobotStore((s) => s.error)
   const setError = useRobotStore((s) => s.setError)
+
+  // 전역 키보드 단축키 등록
+  useKeyboardShortcuts()
+  const showShortcuts = useUIStore((s) => s.showShortcuts)
+  const closeShortcuts = useUIStore((s) => s.closeShortcuts)
 
   // 로봇이 로드되지 않았으면 EmptyState 오버레이 표시
   const hasRobot = robotName !== null
@@ -44,6 +50,8 @@ export function ViewerPage(): ReactNode {
       <div className={styles.panelArea}>
         <ParameterPanel />
       </div>
+
+      {showShortcuts && <ShortcutsModal onClose={closeShortcuts} />}
     </div>
   )
 }

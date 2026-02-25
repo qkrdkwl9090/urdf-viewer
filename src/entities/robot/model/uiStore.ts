@@ -12,6 +12,8 @@ interface UIState {
   angleUnit: AngleUnit
   /** 조인트 리밋 무시 여부 */
   ignoreLimits: boolean
+  /** 단축키 도움말 모달 표시 여부 */
+  showShortcuts: boolean
 }
 
 interface UIActions {
@@ -21,6 +23,8 @@ interface UIActions {
   setActiveTab: (tab: ActiveTab) => void
   toggleAngleUnit: () => void
   toggleIgnoreLimits: () => void
+  toggleShortcuts: () => void
+  closeShortcuts: () => void
 }
 
 export const useUIStore = create<UIState & UIActions>()((set) => ({
@@ -28,6 +32,7 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
   activeTab: 'joints',
   angleUnit: 'rad',
   ignoreLimits: false,
+  showShortcuts: false,
 
   togglePanel: () => set((state) => ({ isPanelOpen: !state.isPanelOpen })),
 
@@ -42,4 +47,9 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
 
   toggleIgnoreLimits: () =>
     set((state) => ({ ignoreLimits: !state.ignoreLimits })),
+
+  toggleShortcuts: () =>
+    set((state) => ({ showShortcuts: !state.showShortcuts })),
+
+  closeShortcuts: () => set({ showShortcuts: false }),
 }))

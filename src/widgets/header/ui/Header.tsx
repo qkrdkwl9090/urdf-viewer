@@ -1,6 +1,6 @@
 import { useCallback, type ReactNode } from 'react'
-import { Box, Github, X } from 'lucide-react'
-import { useRobotStore } from '@entities/robot'
+import { Box, Github, Keyboard, X } from 'lucide-react'
+import { useRobotStore, useUIStore } from '@entities/robot'
 import { useURDFLoader } from '@features/upload-robot'
 import { IconButton } from '@shared/ui'
 import styles from './Header.module.css'
@@ -13,6 +13,7 @@ export function Header(): ReactNode {
   const robotName = useRobotStore((s) => s.robotName)
   const isLoading = useRobotStore((s) => s.isLoading)
   const { clearRobot } = useURDFLoader()
+  const toggleShortcuts = useUIStore((s) => s.toggleShortcuts)
 
   const handleClear = useCallback(() => {
     clearRobot()
@@ -40,15 +41,23 @@ export function Header(): ReactNode {
 
       <div className={styles.actions}>
         {robotName && (
-          <IconButton
-            icon={<X size={14} />}
-            tooltip="Close robot"
-            size="sm"
-            onClick={handleClear}
-            disabled={isLoading}
-          />
+          <>
+            <IconButton
+              icon={<X size={14} />}
+              tooltip="Close robot"
+              size="sm"
+              onClick={handleClear}
+              disabled={isLoading}
+            />
+            <span className={styles.divider} />
+          </>
         )}
-        {robotName && <span className={styles.divider} />}
+        <IconButton
+          icon={<Keyboard size={16} />}
+          tooltip="Keyboard shortcuts (?)"
+          size="sm"
+          onClick={toggleShortcuts}
+        />
         <a
           href="https://github.com/qkrdkwl9090/urdf-viewer"
           target="_blank"
