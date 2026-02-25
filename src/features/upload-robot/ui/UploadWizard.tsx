@@ -27,6 +27,7 @@ export function UploadWizard(): ReactNode {
   const isLoading = useRobotStore((s) => s.isLoading)
   const error = useRobotStore((s) => s.error)
   const meshReferences = useRobotStore((s) => s.meshReferences)
+  const xacroIncludes = useRobotStore((s) => s.xacroIncludes)
 
   const {
     parseUrdfFile,
@@ -199,6 +200,7 @@ export function UploadWizard(): ReactNode {
             {step === 2 && (
               <WizardStepMeshes
                 meshReferences={meshReferences}
+                xacroIncludes={xacroIncludes}
                 onAddFiles={handleAddMeshFiles}
                 onAddFolder={handleAddMeshFolder}
                 onBuildRobot={buildRobot}

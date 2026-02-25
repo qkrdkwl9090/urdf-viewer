@@ -8,5 +8,6 @@ export type {
   URDFLink,
   MeshReference,
   UploadedFileInfo,
+  XacroIncludeReference,
 } from './robot'
 export type { ViewerSettings } from './viewer'

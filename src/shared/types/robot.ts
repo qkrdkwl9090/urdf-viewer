@@ -41,6 +41,14 @@ export interface MeshReference {
   extension: string
 }
 
+/** XACRO에서 참조하는 include 파일의 해석 상태 */
+export interface XacroIncludeReference {
+  /** xacro:include에 기록된 경로 */
+  path: string
+  /** FileMap에서 해석 성공 여부 */
+  resolved: boolean
+}
+
 /** 업로드된 파일 정보 */
 export interface UploadedFileInfo {
   /** 파일 경로 (webkitRelativePath 또는 name) */

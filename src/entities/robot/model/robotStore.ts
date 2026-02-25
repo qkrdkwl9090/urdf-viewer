@@ -6,6 +6,7 @@ import type {
   FileMap,
   UploadedFileInfo,
   MeshReference,
+  XacroIncludeReference,
 } from '@shared/types'
 
 interface RobotState {
@@ -29,6 +30,10 @@ interface RobotState {
   meshReferences: MeshReference[]
   /** URDF 원본 텍스트 (재파싱용) */
   urdfContent: string | null
+  /** 확장 전 XACRO 원본 텍스트 (include 해석 후 재확장용) */
+  rawXacroContent: string | null
+  /** XACRO include 해석 상태 */
+  xacroIncludes: XacroIncludeReference[]
 }
 
 interface RobotActions {
@@ -61,6 +66,10 @@ interface RobotActions {
   setUrdfContent: (content: string) => void
   /** 개별 파일 제거 (경로 기반) */
   removeFile: (path: string) => void
+  /** 확장 전 XACRO 원본 텍스트 저장 */
+  setRawXacroContent: (content: string | null) => void
+  /** XACRO include 해석 상태 설정 */
+  setXacroIncludes: (refs: XacroIncludeReference[]) => void
 }
 
 const initialState: RobotState = {
@@ -74,6 +83,8 @@ const initialState: RobotState = {
   uploadedFiles: [],
   meshReferences: [],
   urdfContent: null,
+  rawXacroContent: null,
+  xacroIncludes: [],
 }
 
 export const useRobotStore = create<RobotState & RobotActions>()((set) => ({
@@ -172,6 +183,10 @@ export const useRobotStore = create<RobotState & RobotActions>()((set) => ({
   setMeshReferences: (refs) => set({ meshReferences: refs }),
 
   setUrdfContent: (content) => set({ urdfContent: content }),
+
+  setRawXacroContent: (content) => set({ rawXacroContent: content }),
+
+  setXacroIncludes: (refs) => set({ xacroIncludes: refs }),
 
   removeFile: (path) =>
     set((state) => {
