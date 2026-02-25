@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-type ActiveTab = 'joints' | 'settings'
+type ActiveTab = 'joints' | 'model' | 'settings'
 type AngleUnit = 'rad' | 'deg'
 
 interface UIState {

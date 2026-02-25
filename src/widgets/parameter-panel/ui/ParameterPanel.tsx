@@ -2,6 +2,7 @@ import { useCallback, type ReactNode } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useUIStore } from '@entities/robot'
 import { JointPanel } from '@features/joint-control'
+import { ModelTreePanel } from '@features/model-tree'
 import { SettingsPanel } from '@features/viewer-settings'
 import { IconButton } from '@shared/ui'
 import { PanelTabs } from './PanelTabs'
@@ -44,6 +45,7 @@ export function ParameterPanel(): ReactNode {
           {/* 활성 탭에 따라 해당 패널 렌더링 */}
           <div className={styles.tabContent}>
             {activeTab === 'joints' && <JointPanel />}
+            {activeTab === 'model' && <ModelTreePanel />}
             {activeTab === 'settings' && <SettingsPanel />}
           </div>
         </div>

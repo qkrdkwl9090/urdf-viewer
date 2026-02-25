@@ -62,6 +62,28 @@ function useCameraReset(frameCamera: () => void): void {
 }
 
 /**
+ * 링크 가시성 상태를 실제 Three.js 오브젝트에 동기화한다.
+ * store의 links Map이 변경되면 각 링크의 Object3D.visible을 갱신한다.
+ */
+function useLinkVisibilitySync(robot: URDFRobot | null): void {
+  const links = useRobotStore((s) => s.links)
+  const { invalidate } = useThree()
+
+  useEffect(() => {
+    if (!robot) return
+
+    for (const [name, state] of links) {
+      const linkObj = robot.links[name]
+      if (linkObj) {
+        linkObj.visible = state.visible
+      }
+    }
+    // Three.js 씬 갱신 요청 (frameloop="demand" 대비)
+    invalidate()
+  }, [robot, links, invalidate])
+}
+
+/**
  * URDFRobot을 R3F 씬에 렌더링하는 컴포넌트.
  * urdf-loader의 URDFRobot은 Three.js Object3D를 상속하므로
  * primitive 요소로 직접 씬에 추가한다.
@@ -74,6 +96,9 @@ export function RobotModel(): ReactNode {
 
   // 카메라 리셋 요청 처리
   useCameraReset(frameCamera)
+
+  // 링크 가시성 동기화
+  useLinkVisibilitySync(robot)
 
   if (!robot) return null
 
