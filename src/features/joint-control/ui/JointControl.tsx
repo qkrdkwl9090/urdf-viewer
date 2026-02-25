@@ -1,14 +1,71 @@
-import { useCallback, type ReactNode } from 'react'
+import { useCallback, useMemo, type ReactNode } from 'react'
 import { useRobotStore, useUIStore } from '@entities/robot'
-import { Slider, Badge } from '@shared/ui'
+import { Slider, Badge, Tooltip } from '@shared/ui'
 import type { JointState } from '@shared/types'
 import styles from './JointControl.module.css'
+import tooltipStyles from './JointTooltip.module.css'
 
 const RAD_TO_DEG = 180 / Math.PI
 const DEG_TO_RAD = Math.PI / 180
 
 interface JointControlProps {
   joint: JointState
+}
+
+/** 조인트 tooltip에 표시할 상세 정보 */
+function JointTooltipContent({ joint }: { joint: JointState }): ReactNode {
+  const robot = useRobotStore((s) => s.robot)
+
+  // urdf-loader 조인트 객체에서 부모/자식 링크 이름 조회
+  const { parentLink, childLink } = useMemo(() => {
+    if (!robot) return { parentLink: undefined, childLink: undefined }
+    const urdfJoint = robot.joints[joint.name]
+    if (!urdfJoint) return { parentLink: undefined, childLink: undefined }
+
+    const parent = urdfJoint.parent
+    const pName = parent && 'isURDFLink' in parent
+      ? (parent as unknown as { urdfName: string }).urdfName
+      : undefined
+
+    const childLinkObj = urdfJoint.children.find(
+      (c) => 'isURDFLink' in c && (c as unknown as { isURDFLink: boolean }).isURDFLink,
+    )
+    const cName = childLinkObj
+      ? (childLinkObj as unknown as { urdfName: string }).urdfName
+      : undefined
+
+    return { parentLink: pName, childLink: cName }
+  }, [robot, joint.name])
+
+  const axisStr = `[${joint.axis.map((v) => v.toFixed(1)).join(', ')}]`
+  const limitsStr = `${joint.min.toFixed(3)} ~ ${joint.max.toFixed(3)} rad`
+
+  return (
+    <div className={tooltipStyles.grid}>
+      <span className={tooltipStyles.label}>Type</span>
+      <span className={tooltipStyles.value}>{joint.type}</span>
+      <span className={tooltipStyles.label}>Axis</span>
+      <span className={tooltipStyles.value}>{axisStr}</span>
+      {joint.type !== 'continuous' && joint.type !== 'fixed' && (
+        <>
+          <span className={tooltipStyles.label}>Limits</span>
+          <span className={tooltipStyles.value}>{limitsStr}</span>
+        </>
+      )}
+      {parentLink && (
+        <>
+          <span className={tooltipStyles.label}>Parent</span>
+          <span className={tooltipStyles.value}>{parentLink}</span>
+        </>
+      )}
+      {childLink && (
+        <>
+          <span className={tooltipStyles.label}>Child</span>
+          <span className={tooltipStyles.value}>{childLink}</span>
+        </>
+      )}
+    </div>
+  )
 }
 
 /**
@@ -46,21 +103,23 @@ export function JointControl({ joint }: JointControlProps): ReactNode {
   )
 
   return (
-    <div className={styles.row}>
-      <div className={styles.header}>
-        <span className={styles.name} title={joint.name}>
-          {joint.name}
-        </span>
-        <Badge>{joint.type}</Badge>
+    <Tooltip content={<JointTooltipContent joint={joint} />} position="left">
+      <div className={styles.row}>
+        <div className={styles.header}>
+          <span className={styles.name} title={joint.name}>
+            {joint.name}
+          </span>
+          <Badge>{joint.type}</Badge>
+        </div>
+        <Slider
+          value={displayValue}
+          min={displayMin}
+          max={displayMax}
+          step={step}
+          unit={unit}
+          onChange={handleChange}
+        />
       </div>
-      <Slider
-        value={displayValue}
-        min={displayMin}
-        max={displayMax}
-        step={step}
-        unit={unit}
-        onChange={handleChange}
-      />
-    </div>
+    </Tooltip>
   )
 }

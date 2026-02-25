@@ -1,13 +1,80 @@
 import { useState, useCallback, type ReactNode } from 'react'
 import { ChevronRight, Box, Waypoints, Eye, EyeOff } from 'lucide-react'
 import { useRobotStore } from '@entities/robot'
-import { Badge } from '@shared/ui'
+import { Badge, Tooltip } from '@shared/ui'
 import type { TreeNode } from '../lib/buildTree'
 import styles from './TreeNodeRow.module.css'
+import tooltipStyles from './TreeNodeTooltip.module.css'
 
 interface TreeNodeRowProps {
   node: TreeNode
   depth: number
+}
+
+/** 조인트 노드의 tooltip 상세 정보 */
+function JointNodeTooltip({ node }: { node: TreeNode }): ReactNode {
+  const axisStr = node.axis
+    ? `[${node.axis.map((v) => v.toFixed(1)).join(', ')}]`
+    : null
+  const hasLimits =
+    node.jointType !== 'continuous' &&
+    node.jointType !== 'fixed' &&
+    node.limitLower !== undefined &&
+    node.limitUpper !== undefined
+  const limitsStr = hasLimits
+    ? `${node.limitLower!.toFixed(3)} ~ ${node.limitUpper!.toFixed(3)} rad`
+    : null
+
+  return (
+    <div className={tooltipStyles.grid}>
+      <span className={tooltipStyles.label}>Type</span>
+      <span className={tooltipStyles.value}>{node.jointType}</span>
+      {axisStr && (
+        <>
+          <span className={tooltipStyles.label}>Axis</span>
+          <span className={tooltipStyles.value}>{axisStr}</span>
+        </>
+      )}
+      {limitsStr && (
+        <>
+          <span className={tooltipStyles.label}>Limits</span>
+          <span className={tooltipStyles.value}>{limitsStr}</span>
+        </>
+      )}
+      {node.parentLink && (
+        <>
+          <span className={tooltipStyles.label}>Parent</span>
+          <span className={tooltipStyles.value}>{node.parentLink}</span>
+        </>
+      )}
+      {node.childLink && (
+        <>
+          <span className={tooltipStyles.label}>Child</span>
+          <span className={tooltipStyles.value}>{node.childLink}</span>
+        </>
+      )}
+    </div>
+  )
+}
+
+/** 링크 노드의 tooltip 상세 정보 */
+function LinkNodeTooltip({ node }: { node: TreeNode }): ReactNode {
+  return (
+    <div className={tooltipStyles.grid}>
+      {node.childJointCount !== undefined && (
+        <>
+          <span className={tooltipStyles.label}>Child joints</span>
+          <span className={tooltipStyles.value}>{node.childJointCount}</span>
+        </>
+      )}
+      {node.parentJoint && (
+        <>
+          <span className={tooltipStyles.label}>Parent joint</span>
+          <span className={tooltipStyles.value}>{node.parentJoint}</span>
+        </>
+      )}
+    </div>
+  )
 }
 
 /**
@@ -47,55 +114,62 @@ export function TreeNodeRow({ node, depth }: TreeNodeRowProps): ReactNode {
     node.kind === 'link' ? styles.iconLink : styles.iconJoint,
   ].join(' ')
 
+  const tooltipContent =
+    node.kind === 'joint'
+      ? <JointNodeTooltip node={node} />
+      : <LinkNodeTooltip node={node} />
+
   return (
     <div className={styles.nodeGroup}>
-      <div
-        className={styles.row}
-        style={{ paddingLeft: `${String(depth * 16 + 8)}px` }}
-        onClick={hasChildren ? handleToggle : undefined}
-      >
-        {/* 접기/펴기 — row에도 onClick이 있으므로 버블링 방지 */}
-        <button
-          className={chevronClass}
-          onClick={(e) => { e.stopPropagation(); handleToggle() }}
-          type="button"
-          tabIndex={hasChildren ? 0 : -1}
+      <Tooltip content={tooltipContent} position="right">
+        <div
+          className={styles.row}
+          style={{ paddingLeft: `${String(depth * 16 + 8)}px` }}
+          onClick={hasChildren ? handleToggle : undefined}
         >
-          <ChevronRight size={12} />
-        </button>
-
-        {/* 아이콘 */}
-        <span className={iconClass}>
-          {node.kind === 'link' ? <Box size={14} /> : <Waypoints size={14} />}
-        </span>
-
-        {/* 이름 */}
-        <span className={styles.name} title={node.name}>
-          {node.name}
-        </span>
-
-        {/* 조인트: 타입 배지 */}
-        {node.kind === 'joint' && node.jointType && (
-          <Badge>{node.jointType}</Badge>
-        )}
-
-        {/* 링크: 가시성 토글 */}
-        {node.kind === 'link' && (
+          {/* 접기/펴기 — row에도 onClick이 있으므로 버블링 방지 */}
           <button
-            className={[
-              styles.visibilityBtn,
-              node.visible === false ? styles.visibilityHidden : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-            onClick={handleVisibilityClick}
+            className={chevronClass}
+            onClick={(e) => { e.stopPropagation(); handleToggle() }}
             type="button"
-            title={node.visible !== false ? 'Hide link' : 'Show link'}
+            tabIndex={hasChildren ? 0 : -1}
           >
-            {node.visible !== false ? <Eye size={14} /> : <EyeOff size={14} />}
+            <ChevronRight size={12} />
           </button>
-        )}
-      </div>
+
+          {/* 아이콘 */}
+          <span className={iconClass}>
+            {node.kind === 'link' ? <Box size={14} /> : <Waypoints size={14} />}
+          </span>
+
+          {/* 이름 */}
+          <span className={styles.name} title={node.name}>
+            {node.name}
+          </span>
+
+          {/* 조인트: 타입 배지 */}
+          {node.kind === 'joint' && node.jointType && (
+            <Badge>{node.jointType}</Badge>
+          )}
+
+          {/* 링크: 가시성 토글 */}
+          {node.kind === 'link' && (
+            <button
+              className={[
+                styles.visibilityBtn,
+                node.visible === false ? styles.visibilityHidden : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              onClick={handleVisibilityClick}
+              type="button"
+              title={node.visible !== false ? 'Hide link' : 'Show link'}
+            >
+              {node.visible !== false ? <Eye size={14} /> : <EyeOff size={14} />}
+            </button>
+          )}
+        </div>
+      </Tooltip>
 
       {/* 자식 노드 재귀 */}
       {hasChildren && isExpanded && (

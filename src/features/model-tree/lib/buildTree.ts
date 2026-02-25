@@ -10,6 +10,17 @@ export interface TreeNode {
   /** 링크 노드일 때만 존재 */
   visible?: boolean
   children: TreeNode[]
+
+  /* ── 조인트 tooltip 정보 ── */
+  axis?: [number, number, number]
+  limitLower?: number
+  limitUpper?: number
+  parentLink?: string
+  childLink?: string
+
+  /* ── 링크 tooltip 정보 ── */
+  childJointCount?: number
+  parentJoint?: string
 }
 
 // 타입 가드 — urdf-loader 클래스 판별
@@ -34,20 +45,44 @@ export function buildTree(
 
     for (const child of obj.children) {
       if (isURDFJoint(child)) {
+        // 부모 링크: Three.js 계층에서 Joint의 parent
+        const parentLink = child.parent && isURDFLink(child.parent)
+          ? child.parent.urdfName
+          : undefined
+        // 자식 링크: Joint의 children 중 첫 번째 URDFLink
+        const childLinkObj = child.children.find((c): c is URDFLink => isURDFLink(c))
+        const axis = child.axis
+          ? [child.axis.x, child.axis.y, child.axis.z] as [number, number, number]
+          : undefined
+
         nodes.push({
           id: child.urdfName,
           name: child.urdfName,
           kind: 'joint',
           jointType: child.jointType as JointType,
+          axis,
+          limitLower: child.limit?.lower,
+          limitUpper: child.limit?.upper,
+          parentLink,
+          childLink: childLinkObj?.urdfName,
           children: walkChildren(child),
         })
       } else if (isURDFLink(child)) {
         const linkState = links.get(child.urdfName)
+        // 부모 조인트: Three.js 계층에서 Link의 parent
+        const parentJoint = child.parent && isURDFJoint(child.parent)
+          ? child.parent.urdfName
+          : undefined
+        // 자식 조인트 수
+        const childJointCount = child.children.filter((c) => isURDFJoint(c)).length
+
         nodes.push({
           id: child.urdfName,
           name: child.urdfName,
           kind: 'link',
           visible: linkState?.visible ?? true,
+          parentJoint,
+          childJointCount,
           children: walkChildren(child),
         })
       } else {

@@ -1,0 +1,18 @@
+.grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px var(--space-3);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.label {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.value {
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
