@@ -18,6 +18,8 @@ export function SettingsPanel(): ReactNode {
   const hasRobot = useRobotStore((s) => s.robotName !== null)
   const angleUnit = useUIStore((s) => s.angleUnit)
   const toggleAngleUnit = useUIStore((s) => s.toggleAngleUnit)
+  const ignoreLimits = useUIStore((s) => s.ignoreLimits)
+  const toggleIgnoreLimits = useUIStore((s) => s.toggleIgnoreLimits)
 
   const handleGridToggle = useCallback(() => {
     toggleGrid()
@@ -30,6 +32,10 @@ export function SettingsPanel(): ReactNode {
   const handleAngleUnitToggle = useCallback(() => {
     toggleAngleUnit()
   }, [toggleAngleUnit])
+
+  const handleIgnoreLimitsToggle = useCallback(() => {
+    toggleIgnoreLimits()
+  }, [toggleIgnoreLimits])
 
   const handleCameraReset = useCallback(() => {
     requestCameraReset()
@@ -65,6 +71,14 @@ export function SettingsPanel(): ReactNode {
           <Toggle
             checked={angleUnit === 'deg'}
             onChange={handleAngleUnitToggle}
+            label=""
+          />
+        </div>
+        <div className={styles.toggleRow}>
+          <span className={styles.toggleLabel}>Ignore Joint Limits</span>
+          <Toggle
+            checked={ignoreLimits}
+            onChange={handleIgnoreLimitsToggle}
             label=""
           />
         </div>

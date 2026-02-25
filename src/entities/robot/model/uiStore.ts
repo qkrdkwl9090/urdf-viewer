@@ -10,6 +10,8 @@ interface UIState {
   activeTab: ActiveTab
   /** 각도 단위 (라디안/디그리) */
   angleUnit: AngleUnit
+  /** 조인트 리밋 무시 여부 */
+  ignoreLimits: boolean
 }
 
 interface UIActions {
@@ -18,12 +20,14 @@ interface UIActions {
   closePanel: () => void
   setActiveTab: (tab: ActiveTab) => void
   toggleAngleUnit: () => void
+  toggleIgnoreLimits: () => void
 }
 
 export const useUIStore = create<UIState & UIActions>()((set) => ({
   isPanelOpen: true,
   activeTab: 'joints',
   angleUnit: 'rad',
+  ignoreLimits: false,
 
   togglePanel: () => set((state) => ({ isPanelOpen: !state.isPanelOpen })),
 
@@ -35,4 +39,7 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
 
   toggleAngleUnit: () =>
     set((state) => ({ angleUnit: state.angleUnit === 'rad' ? 'deg' : 'rad' })),
+
+  toggleIgnoreLimits: () =>
+    set((state) => ({ ignoreLimits: !state.ignoreLimits })),
 }))

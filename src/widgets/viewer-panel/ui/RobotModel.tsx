@@ -1,7 +1,7 @@
 import { useEffect, useCallback, type ReactNode } from 'react'
 import { useThree } from '@react-three/fiber'
 import { Box3, Vector3 } from 'three'
-import { useRobotStore, useViewerStore } from '@entities/robot'
+import { useRobotStore, useViewerStore, useUIStore } from '@entities/robot'
 import type { URDFRobot } from '@shared/types'
 
 /**
@@ -84,6 +84,22 @@ function useLinkVisibilitySync(robot: URDFRobot | null): void {
 }
 
 /**
+ * urdf-loader의 각 조인트 객체에 ignoreLimits 플래그를 동기화한다.
+ * 이 플래그가 true이면 setJointValue 내부 클램핑이 비활성화된다.
+ */
+function useIgnoreLimitsSync(robot: URDFRobot | null): void {
+  const ignoreLimits = useUIStore((s) => s.ignoreLimits)
+
+  useEffect(() => {
+    if (!robot) return
+
+    for (const joint of Object.values(robot.joints)) {
+      (joint as unknown as { ignoreLimits: boolean }).ignoreLimits = ignoreLimits
+    }
+  }, [robot, ignoreLimits])
+}
+
+/**
  * URDFRobot을 R3F 씬에 렌더링하는 컴포넌트.
  * urdf-loader의 URDFRobot은 Three.js Object3D를 상속하므로
  * primitive 요소로 직접 씬에 추가한다.
@@ -99,6 +115,9 @@ export function RobotModel(): ReactNode {
 
   // 링크 가시성 동기화
   useLinkVisibilitySync(robot)
+
+  // 조인트 리밋 무시 플래그 동기화
+  useIgnoreLimitsSync(robot)
 
   if (!robot) return null
 

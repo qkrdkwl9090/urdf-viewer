@@ -18,16 +18,23 @@ interface JointControlProps {
  */
 export function JointControl({ joint }: JointControlProps): ReactNode {
   const angleUnit = useUIStore((s) => s.angleUnit)
+  const ignoreLimits = useUIStore((s) => s.ignoreLimits)
   const isPrismatic = joint.type === 'prismatic'
   const useDeg = !isPrismatic && angleUnit === 'deg'
 
   const step = isPrismatic ? 0.001 : useDeg ? 1 : 0.01
   const unit = isPrismatic ? 'm' : useDeg ? 'deg' : 'rad'
 
+  // ignoreLimits 시 슬라이더 범위를 ±2π(revolute) 또는 ±10(prismatic)로 확장
+  const extendedMin = isPrismatic ? -10 : -2 * Math.PI
+  const extendedMax = isPrismatic ? 10 : 2 * Math.PI
+  const effectiveMin = ignoreLimits ? extendedMin : joint.min
+  const effectiveMax = ignoreLimits ? extendedMax : joint.max
+
   // 표시값 변환 (rad → deg)
   const displayValue = useDeg ? joint.value * RAD_TO_DEG : joint.value
-  const displayMin = useDeg ? joint.min * RAD_TO_DEG : joint.min
-  const displayMax = useDeg ? joint.max * RAD_TO_DEG : joint.max
+  const displayMin = useDeg ? effectiveMin * RAD_TO_DEG : effectiveMin
+  const displayMax = useDeg ? effectiveMax * RAD_TO_DEG : effectiveMax
 
   // 입력값을 라디안으로 변환 후 스토어에 저장
   const handleChange = useCallback(

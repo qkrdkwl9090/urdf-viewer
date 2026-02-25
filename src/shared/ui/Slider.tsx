@@ -48,11 +48,10 @@ export function Slider({
     if (inputText === null) return
     const parsed = Number(inputText)
     if (!Number.isNaN(parsed)) {
-      const clamped = Math.min(Math.max(parsed, min), max)
-      onChange(clamped)
+      onChange(parsed)
     }
     setInputText(null)
-  }, [inputText, min, max, onChange])
+  }, [inputText, onChange])
 
   const handleInputFocus = useCallback(() => {
     setInputText(String(value))

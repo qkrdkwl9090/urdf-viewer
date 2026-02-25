@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useUIStore } from './uiStore'
 import type {
   JointState,
   LinkState,
@@ -105,9 +106,10 @@ export const useRobotStore = create<RobotState & RobotActions>()((set) => ({
       const joint = state.joints.get(name)
       if (!joint) return state
 
-      // 조인트 범위 내로 클램핑 (continuous 타입은 제한 없음)
+      // ignoreLimits가 켜져 있거나 continuous 타입이면 클램핑 스킵
+      const { ignoreLimits } = useUIStore.getState()
       const clampedValue =
-        joint.type === 'continuous'
+        ignoreLimits || joint.type === 'continuous'
           ? value
           : Math.min(Math.max(value, joint.min), joint.max)
 
