@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { OrbitControls } from '@react-three/drei'
+import { OrbitControls, GizmoHelper, GizmoViewcube } from '@react-three/drei'
 import { SceneHelpers } from './SceneHelpers'
 import { RobotModel } from './RobotModel'
 
@@ -12,6 +12,17 @@ export function SceneContent(): ReactNode {
     <>
       {/* 카메라 컨트롤 -- 감쇠(damping) 활성화로 부드러운 조작 */}
       <OrbitControls enableDamping dampingFactor={0.1} makeDefault />
+
+      {/* 방향 큐브 — 우측 상단에 XYZ 방향 표시, 클릭 시 해당 뷰로 전환 */}
+      <GizmoHelper alignment="top-right" margin={[64, 64]}>
+        <GizmoViewcube
+          color="#2a2a2e"
+          textColor="white"
+          strokeColor="#555"
+          opacity={1}
+          hoverColor="#3b82f6"
+        />
+      </GizmoHelper>
 
       {/* 조명 설정 */}
       <ambientLight intensity={0.4} />
