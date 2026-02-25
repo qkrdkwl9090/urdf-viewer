@@ -23,7 +23,7 @@ export function SceneHelpers(): ReactNode {
           infiniteGrid
         />
       )}
-      {showAxes && <axesHelper args={[1]} />}
+      {showAxes && <axesHelper args={[5]} />}
     </>
   )
 }
