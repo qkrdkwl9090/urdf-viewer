@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { OrbitControls, GizmoHelper, GizmoViewcube } from '@react-three/drei'
+import { OrbitControls, GizmoHelper, GizmoViewcube, Environment } from '@react-three/drei'
 import { SceneHelpers } from './SceneHelpers'
 import { RobotModel } from './RobotModel'
 
@@ -24,15 +24,13 @@ export function SceneContent(): ReactNode {
         />
       </GizmoHelper>
 
+      {/* 환경맵 — PBR 머티리얼에 자연스러운 반사광 제공 */}
+      <Environment preset="studio" />
+
       {/* 조명 설정 */}
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[5, 10, 5]} intensity={0.8} />
-      {/* 반구 조명 -- 하늘/지면 색으로 자연스러운 채움 효과 */}
-      <hemisphereLight
-        color="#b1e1ff"
-        groundColor="#b97a20"
-        intensity={0.3}
-      />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[5, 10, 5]} intensity={1} />
+      <directionalLight position={[-5, 5, -5]} intensity={0.4} />
 
       {/* 그리드/축 헬퍼 */}
       <SceneHelpers />
