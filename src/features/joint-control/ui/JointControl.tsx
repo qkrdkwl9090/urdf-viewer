@@ -1,4 +1,4 @@
-import { useCallback, useMemo, type ReactNode } from 'react'
+import { useCallback, useMemo, useRef, useEffect, type ReactNode } from 'react'
 import { useRobotStore, useUIStore } from '@entities/robot'
 import { Slider, Badge, Tooltip } from '@shared/ui'
 import type { JointState } from '@shared/types'
@@ -111,6 +111,14 @@ export function JointControl({ joint }: JointControlProps): ReactNode {
     return false
   }, [selectedItem, robot, joint.name])
 
+  // 선택 시 스크롤하여 화면에 표시
+  const rowRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (isSelected && rowRef.current) {
+      rowRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  }, [isSelected])
+
   const handleSelect = useCallback(() => {
     selectItem({ name: joint.name, kind: 'joint' })
   }, [selectItem, joint.name])
@@ -126,7 +134,7 @@ export function JointControl({ joint }: JointControlProps): ReactNode {
 
   return (
     <Tooltip content={<JointTooltipContent joint={joint} />} position="left">
-      <div className={[styles.row, isSelected ? styles.rowSelected : ''].filter(Boolean).join(' ')}>
+      <div ref={rowRef} className={[styles.row, isSelected ? styles.rowSelected : ''].filter(Boolean).join(' ')}>
         <div className={styles.header} onClick={handleSelect} style={{ cursor: 'pointer' }}>
           <span className={styles.name} title={joint.name}>
             {joint.name}
