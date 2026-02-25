@@ -48,6 +48,7 @@ export function Header(): ReactNode {
             disabled={isLoading}
           />
         )}
+        {robotName && <span className={styles.divider} />}
         <a
           href="https://github.com/qkrdkwl9090/urdf-viewer"
           target="_blank"
