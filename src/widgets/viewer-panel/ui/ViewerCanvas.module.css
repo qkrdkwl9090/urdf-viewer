@@ -3,4 +3,9 @@
   height: 100%;
   position: relative;
   overflow: hidden;
+  cursor: grab;
+}
+
+.canvasContainer:active {
+  cursor: grabbing;
 }
