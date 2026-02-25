@@ -1,6 +1,6 @@
 import { useCallback, type ReactNode } from 'react'
 import { RotateCcw, Home } from 'lucide-react'
-import { useViewerStore, useRobotStore } from '@entities/robot'
+import { useViewerStore, useRobotStore, useUIStore } from '@entities/robot'
 import { Button, Toggle } from '@shared/ui'
 import styles from './SettingsPanel.module.css'
 
@@ -16,6 +16,8 @@ export function SettingsPanel(): ReactNode {
   const requestCameraReset = useViewerStore((s) => s.requestCameraReset)
   const resetJoints = useRobotStore((s) => s.resetJoints)
   const hasRobot = useRobotStore((s) => s.robotName !== null)
+  const angleUnit = useUIStore((s) => s.angleUnit)
+  const toggleAngleUnit = useUIStore((s) => s.toggleAngleUnit)
 
   const handleGridToggle = useCallback(() => {
     toggleGrid()
@@ -24,6 +26,10 @@ export function SettingsPanel(): ReactNode {
   const handleAxesToggle = useCallback(() => {
     toggleAxes()
   }, [toggleAxes])
+
+  const handleAngleUnitToggle = useCallback(() => {
+    toggleAngleUnit()
+  }, [toggleAngleUnit])
 
   const handleCameraReset = useCallback(() => {
     requestCameraReset()
@@ -51,6 +57,14 @@ export function SettingsPanel(): ReactNode {
           <Toggle
             checked={showAxes}
             onChange={handleAxesToggle}
+            label=""
+          />
+        </div>
+        <div className={styles.toggleRow}>
+          <span className={styles.toggleLabel}>Use Degrees</span>
+          <Toggle
+            checked={angleUnit === 'deg'}
+            onChange={handleAngleUnitToggle}
             label=""
           />
         </div>

@@ -1,8 +1,11 @@
 import { useCallback, type ReactNode } from 'react'
-import { useRobotStore } from '@entities/robot'
+import { useRobotStore, useUIStore } from '@entities/robot'
 import { Slider, Badge } from '@shared/ui'
 import type { JointState } from '@shared/types'
 import styles from './JointControl.module.css'
+
+const RAD_TO_DEG = 180 / Math.PI
+const DEG_TO_RAD = Math.PI / 180
 
 interface JointControlProps {
   joint: JointState
@@ -10,20 +13,29 @@ interface JointControlProps {
 
 /**
  * 단일 조인트 행 — 이름, 타입 배지, 슬라이더를 표시한다.
- * 슬라이더 변경 시 스토어를 직접 호출해 불필요한 리렌더링을 방지한다.
+ * 스토어의 angleUnit에 따라 rad/deg 변환을 표시 경계에서 처리한다.
+ * 내부 저장은 항상 라디안.
  */
 export function JointControl({ joint }: JointControlProps): ReactNode {
-  // prismatic 조인트는 더 작은 스텝과 'm' 단위 사용
+  const angleUnit = useUIStore((s) => s.angleUnit)
   const isPrismatic = joint.type === 'prismatic'
-  const step = isPrismatic ? 0.001 : 0.01
-  const unit = isPrismatic ? 'm' : 'rad'
+  const useDeg = !isPrismatic && angleUnit === 'deg'
 
-  // 스토어 직접 호출로 리렌더링 최소화
+  const step = isPrismatic ? 0.001 : useDeg ? 1 : 0.01
+  const unit = isPrismatic ? 'm' : useDeg ? 'deg' : 'rad'
+
+  // 표시값 변환 (rad → deg)
+  const displayValue = useDeg ? joint.value * RAD_TO_DEG : joint.value
+  const displayMin = useDeg ? joint.min * RAD_TO_DEG : joint.min
+  const displayMax = useDeg ? joint.max * RAD_TO_DEG : joint.max
+
+  // 입력값을 라디안으로 변환 후 스토어에 저장
   const handleChange = useCallback(
     (value: number) => {
-      useRobotStore.getState().setJointValue(joint.name, value)
+      const radValue = useDeg ? value * DEG_TO_RAD : value
+      useRobotStore.getState().setJointValue(joint.name, radValue)
     },
-    [joint.name],
+    [joint.name, useDeg],
   )
 
   return (
@@ -35,9 +47,9 @@ export function JointControl({ joint }: JointControlProps): ReactNode {
         <Badge>{joint.type}</Badge>
       </div>
       <Slider
-        value={joint.value}
-        min={joint.min}
-        max={joint.max}
+        value={displayValue}
+        min={displayMin}
+        max={displayMax}
         step={step}
         unit={unit}
         onChange={handleChange}
