@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { Grid } from '@react-three/drei'
 import { useViewerStore } from '@entities/robot'
 
 /**
@@ -13,15 +12,7 @@ export function SceneHelpers(): ReactNode {
   return (
     <>
       {showGrid && (
-        <Grid
-          args={[20, 20]}
-          cellSize={0.5}
-          sectionSize={1}
-          cellColor="#1a1a2e"
-          sectionColor="#2a2a3e"
-          fadeDistance={25}
-          infiniteGrid
-        />
+        <gridHelper args={[20, 20, '#444466', '#2a2a3e']} />
       )}
       {showAxes && <axesHelper args={[5]} />}
     </>
