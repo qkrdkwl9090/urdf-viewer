@@ -1,6 +1,6 @@
 .wrapper {
   position: relative;
-  display: inline-flex;
+  display: flex;
   width: 100%;
 }
 
