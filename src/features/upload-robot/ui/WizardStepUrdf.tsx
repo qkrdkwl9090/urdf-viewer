@@ -1,5 +1,5 @@
 import { useRef, useCallback, type ReactNode, type ChangeEvent } from 'react'
-import { FileText, Upload, FolderOpen } from 'lucide-react'
+import { FileText, Upload, FolderOpen, Github } from 'lucide-react'
 import { Button } from '@shared/ui'
 import styles from './WizardStepUrdf.module.css'
 
@@ -9,6 +9,7 @@ const URDF_ACCEPT = '.urdf,.xacro'
 interface WizardStepUrdfProps {
   onFileSelect: (files: FileList) => void
   onFolderSelect: (files: FileList) => void
+  onSwitchToGitHub: () => void
 }
 
 /**
@@ -18,6 +19,7 @@ interface WizardStepUrdfProps {
 export function WizardStepUrdf({
   onFileSelect,
   onFolderSelect,
+  onSwitchToGitHub,
 }: WizardStepUrdfProps): ReactNode {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const folderInputRef = useRef<HTMLInputElement>(null)
@@ -82,6 +84,11 @@ export function WizardStepUrdf({
         <span>or drag and drop</span>
         <span className={styles.dividerLine} />
       </div>
+
+      <Button variant="ghost" size="sm" onClick={onSwitchToGitHub}>
+        <Github size={14} />
+        Load from GitHub
+      </Button>
 
       <p className={styles.tip}>
         Tip: Drop your entire ROS package folder to auto-detect URDF and mesh

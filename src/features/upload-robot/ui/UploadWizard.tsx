@@ -8,9 +8,13 @@ import { useRobotStore } from '@entities/robot'
 import { useURDFLoader } from '../lib/useURDFLoader'
 import { WizardStepUrdf } from './WizardStepUrdf'
 import { WizardStepMeshes } from './WizardStepMeshes'
+import { WizardStepGitHub } from './WizardStepGitHub'
 import styles from './UploadWizard.module.css'
 
 type WizardStep = 1 | 2
+
+/** 위자드 입력 모드: 파일 업로드 또는 GitHub URL */
+type WizardMode = 'upload' | 'github'
 
 /**
  * 2단계 업로드 위자드.
@@ -22,6 +26,7 @@ type WizardStep = 1 | 2
  */
 export function UploadWizard(): ReactNode {
   const [step, setStep] = useState<WizardStep>(1)
+  const [mode, setMode] = useState<WizardMode>('upload')
   const [isDragging, setIsDragging] = useState(false)
 
   const isLoading = useRobotStore((s) => s.isLoading)
@@ -97,6 +102,22 @@ export function UploadWizard(): ReactNode {
     clearRobot()
     setStep(1)
   }, [clearRobot])
+
+  /** GitHub 모드로 전환 */
+  const switchToGitHub = useCallback(() => {
+    setMode('github')
+  }, [])
+
+  /** 파일 업로드 모드로 복귀 */
+  const switchToUpload = useCallback(() => {
+    setMode('upload')
+  }, [])
+
+  /** GitHub 로딩 후 미해석 메시 발견 → 파일 업로드 Step 2로 전환 */
+  const handleGitHubNeedsMeshes = useCallback(() => {
+    setMode('upload')
+    setStep(2)
+  }, [])
 
   // -- 드래그 앤 드롭 핸들러 --
 
@@ -185,6 +206,8 @@ export function UploadWizard(): ReactNode {
       <div className={wizardClass}>
         {isLoading ? (
           <LoadingIndicator />
+        ) : mode === 'github' ? (
+          <WizardStepGitHub onBack={switchToUpload} onNeedsMeshes={handleGitHubNeedsMeshes} />
         ) : (
           <>
             {/* 스텝 인디케이터 */}
@@ -195,6 +218,7 @@ export function UploadWizard(): ReactNode {
               <WizardStepUrdf
                 onFileSelect={handleUrdfFileSelect}
                 onFolderSelect={handleFolderSelect}
+                onSwitchToGitHub={switchToGitHub}
               />
             )}
             {step === 2 && (
