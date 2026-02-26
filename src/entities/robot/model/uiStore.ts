@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-type ActiveTab = 'joints' | 'model' | 'settings'
+type ActiveTab = 'joints' | 'model' | 'settings' | 'editor'
 type AngleUnit = 'rad' | 'deg'
 
 /** 선택 가능한 항목 — 링크 또는 조인트 */
