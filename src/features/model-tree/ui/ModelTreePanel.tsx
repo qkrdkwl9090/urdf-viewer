@@ -1,6 +1,7 @@
 import { useMemo, type ReactNode } from 'react'
-import { useRobotStore } from '@entities/robot'
-import { Badge } from '@shared/ui'
+import { GitFork } from 'lucide-react'
+import { useRobotStore, useUIStore } from '@entities/robot'
+import { Badge, Button } from '@shared/ui'
 import { buildTree } from '../lib/buildTree'
 import { TreeNodeRow } from './TreeNodeRow'
 import styles from './ModelTreePanel.module.css'
@@ -12,6 +13,7 @@ import styles from './ModelTreePanel.module.css'
 export function ModelTreePanel(): ReactNode {
   const robot = useRobotStore((s) => s.robot)
   const links = useRobotStore((s) => s.links)
+  const openGraph = useUIStore((s) => s.openGraph)
 
   // 로봇의 Three.js 씬 그래프에서 트리 구조 생성
   const tree = useMemo(() => {
@@ -19,7 +21,7 @@ export function ModelTreePanel(): ReactNode {
     return buildTree(robot, links)
   }, [robot, links])
 
-  if (!tree) {
+  if (!robot || !tree) {
     return (
       <div className={styles.container}>
         <div className={styles.emptyMessage}>No robot loaded</div>
@@ -27,17 +29,23 @@ export function ModelTreePanel(): ReactNode {
     )
   }
 
-  const linkCount = Object.keys(robot!.links).length
-  const jointCount = Object.keys(robot!.joints).length
+  const linkCount = Object.keys(robot.links).length
+  const jointCount = Object.keys(robot.joints).length
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <span className={styles.title}>{robot!.robotName || 'Robot'}</span>
+        <span className={styles.title}>{robot.robotName || 'Robot'}</span>
         <div className={styles.counts}>
           <Badge>{String(linkCount)} links</Badge>
           <Badge>{String(jointCount)} joints</Badge>
         </div>
+      </div>
+      <div className={styles.actions}>
+        <Button variant="secondary" size="sm" onClick={openGraph}>
+          <GitFork size={14} />
+          View Graph
+        </Button>
       </div>
       <div className={styles.tree}>
         <TreeNodeRow node={tree} depth={0} />

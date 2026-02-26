@@ -22,6 +22,8 @@ interface UIState {
   showShortcuts: boolean
   /** URDF 에디터 모달 표시 여부 */
   isEditorOpen: boolean
+  /** 키네마틱 그래프 모달 표시 여부 */
+  isGraphOpen: boolean
   /** 현재 선택된 항목 */
   selectedItem: SelectedItem | null
 }
@@ -37,6 +39,8 @@ interface UIActions {
   closeShortcuts: () => void
   openEditor: () => void
   closeEditor: () => void
+  openGraph: () => void
+  closeGraph: () => void
   /** 항목 선택 — 같은 항목 재클릭 시 해제 (토글) */
   selectItem: (item: SelectedItem) => void
   /** 선택 해제 */
@@ -50,6 +54,7 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
   ignoreLimits: false,
   showShortcuts: false,
   isEditorOpen: false,
+  isGraphOpen: false,
   selectedItem: null,
 
   togglePanel: () => set((state) => ({ isPanelOpen: !state.isPanelOpen })),
@@ -74,6 +79,10 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
   openEditor: () => set({ isEditorOpen: true }),
 
   closeEditor: () => set({ isEditorOpen: false }),
+
+  openGraph: () => set({ isGraphOpen: true }),
+
+  closeGraph: () => set({ isGraphOpen: false }),
 
   selectItem: (item) =>
     set((state) => ({

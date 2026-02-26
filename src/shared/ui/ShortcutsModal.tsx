@@ -9,6 +9,7 @@ const SHORTCUTS = [
   { key: 'D', description: 'Toggle Degrees / Radians' },
   { key: 'L', description: 'Toggle Ignore Joint Limits' },
   { key: 'E', description: 'Toggle URDF Editor' },
+  { key: 'K', description: 'Toggle Kinematic Graph' },
   { key: 'P', description: 'Toggle Panel' },
   { key: '1', description: 'Joints Tab' },
   { key: '2', description: 'Model Tab' },

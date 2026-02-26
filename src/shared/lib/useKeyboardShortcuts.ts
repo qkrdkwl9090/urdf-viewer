@@ -18,6 +18,7 @@ export function useKeyboardShortcuts(): void {
       if (e.key === 'Escape') {
         useUIStore.getState().closeShortcuts()
         useUIStore.getState().closeEditor()
+        useUIStore.getState().closeGraph()
         return
       }
 
@@ -74,6 +75,12 @@ export function useKeyboardShortcuts(): void {
               if (useRobotStore.getState().robotName !== null) {
                 const { isEditorOpen, openEditor, closeEditor } = useUIStore.getState()
                 isEditorOpen ? closeEditor() : openEditor()
+              }
+              break
+            case 'k':
+              if (useRobotStore.getState().robotName !== null) {
+                const { isGraphOpen, openGraph, closeGraph } = useUIStore.getState()
+                isGraphOpen ? closeGraph() : openGraph()
               }
               break
           }
