@@ -8,18 +8,20 @@
   display: block;
 }
 
-/* 노드 (링크) */
+/* ── 노드 (링크) — 클릭 가능, 인터랙티브 ── */
 .node rect {
   fill: var(--color-bg-overlay);
   stroke: var(--color-border-default);
   stroke-width: 1.5;
   rx: 6;
   cursor: pointer;
-  transition: fill 150ms ease-out, stroke 150ms ease-out;
+  transition: fill 150ms ease-out, stroke 150ms ease-out, filter 150ms ease-out;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
 .node:hover rect {
   stroke: var(--color-accent);
+  filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.3));
 }
 
 .nodeRoot rect {
@@ -28,21 +30,23 @@
 }
 
 .nodeSelected rect {
-  fill: rgba(59, 130, 246, 0.25);
+  fill: rgba(59, 130, 246, 0.2);
   stroke: var(--color-accent);
   stroke-width: 2;
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.35));
 }
 
 .nodeLabel {
   fill: var(--color-text-primary);
   font-family: var(--font-mono);
   font-size: 11px;
+  font-weight: 500;
   text-anchor: middle;
   dominant-baseline: central;
   pointer-events: none;
 }
 
-/* 엣지 (조인트) */
+/* ── 엣지 (조인트 연결선) ── */
 .edge {
   fill: none;
   stroke-width: 1.5;
@@ -69,21 +73,48 @@
   stroke: var(--color-text-muted);
 }
 
-/* 엣지 라벨 (조인트 이름) */
+/* ── 엣지 라벨 — 읽기 전용, 비인터랙티브 ── */
+.edgeLabelBg {
+  fill: rgba(10, 10, 11, 0.7);
+  stroke: none;
+  rx: 3;
+  pointer-events: none;
+}
+
 .edgeLabel {
   fill: var(--color-text-muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
   text-anchor: middle;
   dominant-baseline: central;
   pointer-events: none;
 }
 
-/* 조인트 타입 뱃지 */
+/* 조인트 타입 — 엣지 색상과 매칭 */
+.edgeTypeRevolute {
+  fill: var(--color-accent);
+}
+
+.edgeTypePrismatic {
+  fill: #10b981;
+}
+
+.edgeTypeFixed {
+  fill: var(--color-text-muted);
+}
+
+.edgeTypeContinuous {
+  fill: var(--color-accent);
+}
+
+.edgeTypeOther {
+  fill: var(--color-text-muted);
+}
+
 .edgeType {
-  fill: var(--color-text-secondary);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 8px;
+  font-style: italic;
   text-anchor: middle;
   dominant-baseline: central;
   pointer-events: none;
