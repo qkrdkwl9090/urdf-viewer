@@ -11,6 +11,8 @@ interface ViewerActions {
   toggleGrid: () => void
   toggleAxes: () => void
   setBackgroundColor: (color: string) => void
+  /** 조명 밝기 배율 설정 */
+  setLightIntensity: (v: number) => void
   /** 카메라 리셋 요청 (뷰어 컴포넌트가 소비) */
   requestCameraReset: () => void
   /** 카메라 리셋 처리 완료 */
@@ -26,6 +28,8 @@ export const useViewerStore = create<ViewerState & ViewerActions>()((set) => ({
   toggleAxes: () => set((state) => ({ showAxes: !state.showAxes })),
 
   setBackgroundColor: (color) => set({ backgroundColor: color }),
+
+  setLightIntensity: (v) => set({ lightIntensity: v }),
 
   requestCameraReset: () => set({ shouldResetCamera: true }),
 

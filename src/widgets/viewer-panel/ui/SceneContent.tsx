@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { OrbitControls, GizmoHelper, GizmoViewcube, Environment } from '@react-three/drei'
+import { useViewerStore } from '@entities/robot'
 import { SceneHelpers } from './SceneHelpers'
 import { RobotModel } from './RobotModel'
 
@@ -8,6 +9,8 @@ import { RobotModel } from './RobotModel'
  * Canvas 내부에서만 렌더링되어야 함.
  */
 export function SceneContent(): ReactNode {
+  const lightIntensity = useViewerStore((s) => s.lightIntensity)
+
   return (
     <>
       {/* 카메라 컨트롤 -- 감쇠(damping) 활성화로 부드러운 조작 */}
@@ -27,10 +30,10 @@ export function SceneContent(): ReactNode {
       {/* 환경맵 — PBR 머티리얼에 자연스러운 반사광 제공 */}
       <Environment preset="studio" />
 
-      {/* 조명 설정 */}
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[5, 10, 5]} intensity={1} />
-      <directionalLight position={[-5, 5, -5]} intensity={0.4} />
+      {/* 조명 설정 — lightIntensity를 배율로 적용 */}
+      <ambientLight intensity={0.5 * lightIntensity} />
+      <directionalLight position={[5, 10, 5]} intensity={1 * lightIntensity} />
+      <directionalLight position={[-5, 5, -5]} intensity={0.4 * lightIntensity} />
 
       {/* 그리드/축 헬퍼 */}
       <SceneHelpers />

@@ -31,6 +31,10 @@
   color: var(--color-text-secondary);
 }
 
+.sliderRow {
+  padding: var(--space-2) 0;
+}
+
 .buttonGroup {
   display: flex;
   flex-direction: column;

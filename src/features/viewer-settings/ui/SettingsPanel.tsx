@@ -1,7 +1,7 @@
 import { useCallback, type ReactNode } from 'react'
 import { RotateCcw, Home } from 'lucide-react'
 import { useViewerStore, useRobotStore, useUIStore } from '@entities/robot'
-import { Button, Toggle } from '@shared/ui'
+import { Button, Toggle, Slider } from '@shared/ui'
 import styles from './SettingsPanel.module.css'
 
 /**
@@ -18,6 +18,8 @@ export function SettingsPanel(): ReactNode {
   const hasRobot = useRobotStore((s) => s.robotName !== null)
   const angleUnit = useUIStore((s) => s.angleUnit)
   const toggleAngleUnit = useUIStore((s) => s.toggleAngleUnit)
+  const lightIntensity = useViewerStore((s) => s.lightIntensity)
+  const setLightIntensity = useViewerStore((s) => s.setLightIntensity)
   const ignoreLimits = useUIStore((s) => s.ignoreLimits)
   const toggleIgnoreLimits = useUIStore((s) => s.toggleIgnoreLimits)
 
@@ -36,6 +38,11 @@ export function SettingsPanel(): ReactNode {
   const handleIgnoreLimitsToggle = useCallback(() => {
     toggleIgnoreLimits()
   }, [toggleIgnoreLimits])
+
+  const handleLightIntensity = useCallback(
+    (value: number) => { setLightIntensity(value) },
+    [setLightIntensity],
+  )
 
   const handleCameraReset = useCallback(() => {
     requestCameraReset()
@@ -80,6 +87,16 @@ export function SettingsPanel(): ReactNode {
             checked={ignoreLimits}
             onChange={handleIgnoreLimitsToggle}
             label=""
+          />
+        </div>
+        <div className={styles.sliderRow}>
+          <Slider
+            label="Light Intensity"
+            value={lightIntensity}
+            min={0}
+            max={3}
+            step={0.1}
+            onChange={handleLightIntensity}
           />
         </div>
       </div>

@@ -5,6 +5,7 @@ export const DEFAULT_VIEWER_SETTINGS: ViewerSettings = {
   showGrid: true,
   showAxes: true,
   backgroundColor: '#0a0a0b',
+  lightIntensity: 1,
 } as const
 
 /** 기본 카메라 위치 */
