@@ -1,9 +1,9 @@
 import { useCallback, type ReactNode } from 'react'
-import { Sliders, Network, Settings, Code } from 'lucide-react'
+import { Sliders, Network, Settings } from 'lucide-react'
 import { useUIStore } from '@entities/robot'
 import styles from './PanelTabs.module.css'
 
-type TabId = 'joints' | 'model' | 'settings' | 'editor'
+type TabId = 'joints' | 'model' | 'settings'
 
 interface TabItem {
   id: TabId
@@ -14,7 +14,6 @@ interface TabItem {
 const TABS: readonly TabItem[] = [
   { id: 'joints', label: 'Joints', icon: <Sliders size={14} /> },
   { id: 'model', label: 'Model', icon: <Network size={14} /> },
-  { id: 'editor', label: 'Editor', icon: <Code size={14} /> },
   { id: 'settings', label: 'Settings', icon: <Settings size={14} /> },
 ] as const
 

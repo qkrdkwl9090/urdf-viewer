@@ -8,6 +8,7 @@ const SHORTCUTS = [
   { key: 'R', description: 'Reset Joints' },
   { key: 'D', description: 'Toggle Degrees / Radians' },
   { key: 'L', description: 'Toggle Ignore Joint Limits' },
+  { key: 'E', description: 'Toggle URDF Editor' },
   { key: 'P', description: 'Toggle Panel' },
   { key: '1', description: 'Joints Tab' },
   { key: '2', description: 'Model Tab' },

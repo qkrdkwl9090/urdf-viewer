@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-type ActiveTab = 'joints' | 'model' | 'settings' | 'editor'
+type ActiveTab = 'joints' | 'model' | 'settings'
 type AngleUnit = 'rad' | 'deg'
 
 /** 선택 가능한 항목 — 링크 또는 조인트 */
@@ -20,6 +20,8 @@ interface UIState {
   ignoreLimits: boolean
   /** 단축키 도움말 모달 표시 여부 */
   showShortcuts: boolean
+  /** URDF 에디터 모달 표시 여부 */
+  isEditorOpen: boolean
   /** 현재 선택된 항목 */
   selectedItem: SelectedItem | null
 }
@@ -33,6 +35,8 @@ interface UIActions {
   toggleIgnoreLimits: () => void
   toggleShortcuts: () => void
   closeShortcuts: () => void
+  openEditor: () => void
+  closeEditor: () => void
   /** 항목 선택 — 같은 항목 재클릭 시 해제 (토글) */
   selectItem: (item: SelectedItem) => void
   /** 선택 해제 */
@@ -45,6 +49,7 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
   angleUnit: 'rad',
   ignoreLimits: false,
   showShortcuts: false,
+  isEditorOpen: false,
   selectedItem: null,
 
   togglePanel: () => set((state) => ({ isPanelOpen: !state.isPanelOpen })),
@@ -65,6 +70,10 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
     set((state) => ({ showShortcuts: !state.showShortcuts })),
 
   closeShortcuts: () => set({ showShortcuts: false }),
+
+  openEditor: () => set({ isEditorOpen: true }),
+
+  closeEditor: () => set({ isEditorOpen: false }),
 
   selectItem: (item) =>
     set((state) => ({

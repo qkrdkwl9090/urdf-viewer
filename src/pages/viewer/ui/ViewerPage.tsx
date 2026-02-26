@@ -5,6 +5,7 @@ import { Header } from '@widgets/header'
 import { ViewerCanvas } from '@widgets/viewer-panel'
 import { ParameterPanel } from '@widgets/parameter-panel'
 import { UploadWizard } from '@features/upload-robot'
+import { EditorModal } from '@features/urdf-editor'
 import { ErrorBanner, ShortcutsModal } from '@shared/ui'
 import styles from './ViewerPage.module.css'
 
@@ -21,6 +22,8 @@ export function ViewerPage(): ReactNode {
   useKeyboardShortcuts()
   const showShortcuts = useUIStore((s) => s.showShortcuts)
   const closeShortcuts = useUIStore((s) => s.closeShortcuts)
+  const isEditorOpen = useUIStore((s) => s.isEditorOpen)
+  const closeEditor = useUIStore((s) => s.closeEditor)
 
   // 로봇이 로드되지 않았으면 EmptyState 오버레이 표시
   const hasRobot = robotName !== null
@@ -52,6 +55,7 @@ export function ViewerPage(): ReactNode {
       </div>
 
       {showShortcuts && <ShortcutsModal onClose={closeShortcuts} />}
+      {isEditorOpen && <EditorModal onClose={closeEditor} />}
     </div>
   )
 }

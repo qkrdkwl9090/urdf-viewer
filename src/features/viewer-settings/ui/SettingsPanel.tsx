@@ -1,5 +1,5 @@
 import { useCallback, type ReactNode } from 'react'
-import { RotateCcw, Home } from 'lucide-react'
+import { RotateCcw, Home, Code } from 'lucide-react'
 import { useViewerStore, useRobotStore, useUIStore } from '@entities/robot'
 import { Button, Toggle, Slider } from '@shared/ui'
 import styles from './SettingsPanel.module.css'
@@ -22,6 +22,7 @@ export function SettingsPanel(): ReactNode {
   const setLightIntensity = useViewerStore((s) => s.setLightIntensity)
   const ignoreLimits = useUIStore((s) => s.ignoreLimits)
   const toggleIgnoreLimits = useUIStore((s) => s.toggleIgnoreLimits)
+  const openEditor = useUIStore((s) => s.openEditor)
 
   const handleGridToggle = useCallback(() => {
     toggleGrid()
@@ -51,6 +52,10 @@ export function SettingsPanel(): ReactNode {
   const handleJointsReset = useCallback(() => {
     resetJoints()
   }, [resetJoints])
+
+  const handleOpenEditor = useCallback(() => {
+    openEditor()
+  }, [openEditor])
 
   return (
     <div className={styles.container}>
@@ -105,6 +110,15 @@ export function SettingsPanel(): ReactNode {
       <div className={styles.section}>
         <span className={styles.sectionTitle}>Actions</span>
         <div className={styles.buttonGroup}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleOpenEditor}
+            disabled={!hasRobot}
+          >
+            <Code size={14} />
+            Edit URDF
+          </Button>
           <Button variant="secondary" size="sm" onClick={handleCameraReset}>
             <Home size={14} />
             Reset Camera

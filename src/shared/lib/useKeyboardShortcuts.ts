@@ -17,6 +17,7 @@ export function useKeyboardShortcuts(): void {
       // Esc → 모달 닫기
       if (e.key === 'Escape') {
         useUIStore.getState().closeShortcuts()
+        useUIStore.getState().closeEditor()
         return
       }
 
@@ -68,6 +69,12 @@ export function useKeyboardShortcuts(): void {
               break
             case 'p':
               useUIStore.getState().togglePanel()
+              break
+            case 'e':
+              if (useRobotStore.getState().robotName !== null) {
+                const { isEditorOpen, openEditor, closeEditor } = useUIStore.getState()
+                isEditorOpen ? closeEditor() : openEditor()
+              }
               break
           }
       }

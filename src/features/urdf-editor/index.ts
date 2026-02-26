@@ -1,1 +1,1 @@
-export { EditorPanel } from './ui/EditorPanel'
+export { EditorModal } from './ui/EditorModal'

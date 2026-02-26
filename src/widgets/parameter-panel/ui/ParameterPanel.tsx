@@ -4,13 +4,12 @@ import { useUIStore } from '@entities/robot'
 import { JointPanel } from '@features/joint-control'
 import { ModelTreePanel } from '@features/model-tree'
 import { SettingsPanel } from '@features/viewer-settings'
-import { EditorPanel } from '@features/urdf-editor'
 import { IconButton } from '@shared/ui'
 import { PanelTabs } from './PanelTabs'
 import styles from './ParameterPanel.module.css'
 
 /**
- * 우측 파라미터 패널 -- 탭으로 Joints / Settings 전환.
+ * 우측 파라미터 패널 -- 탭으로 Joints / Model / Settings 전환.
  * 패널 접기/펼치기를 지원한다.
  */
 export function ParameterPanel(): ReactNode {
@@ -48,7 +47,6 @@ export function ParameterPanel(): ReactNode {
             {activeTab === 'joints' && <JointPanel />}
             {activeTab === 'model' && <ModelTreePanel />}
             {activeTab === 'settings' && <SettingsPanel />}
-            {activeTab === 'editor' && <EditorPanel />}
           </div>
         </div>
       )}
