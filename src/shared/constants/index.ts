@@ -3,3 +3,6 @@ export {
   DEFAULT_CAMERA_POSITION,
   DEFAULT_CAMERA_FOV,
 } from './defaults'
+
+export { SAMPLE_ROBOTS } from './sampleRobots'
+export type { SampleRobot, SampleRobotType } from './sampleRobots'

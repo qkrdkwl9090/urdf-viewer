@@ -15,6 +15,8 @@ interface WizardStepGitHubProps {
   onBack: () => void
   /** 미해석 메시가 있을 때 호출 — UploadWizard가 Step 2로 전환 */
   onNeedsMeshes: () => void
+  /** 샘플 로봇 등에서 전달받은 초기 URL — 마운트 시 자동 fetch */
+  initialUrl?: string
 }
 
 /**
@@ -24,10 +26,28 @@ interface WizardStepGitHubProps {
 export function WizardStepGitHub({
   onBack,
   onNeedsMeshes,
+  initialUrl,
 }: WizardStepGitHubProps): ReactNode {
   const [urlInput, setUrlInput] = useState('')
   const [selectedEntry, setSelectedEntry] = useState<GitHubTreeEntry | null>(null)
   const { state, fetchRepo, selectUrdfFile, reset } = useGitHubLoader()
+
+  // 초기 URL이 전달되면 마운트 시 자동으로 fetch 시작
+  // (샘플 칩 클릭 시 mode 전환으로 unmount/remount되므로 빈 deps가 안전)
+  useEffect(() => {
+    if (initialUrl) {
+      setUrlInput(initialUrl)
+      fetchRepo(initialUrl)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // 샘플에서 진입했는데 에러 발생 시 → Step 1으로 자동 복귀
+  useEffect(() => {
+    if (initialUrl && state.phase === 'error') {
+      onBack()
+    }
+  }, [initialUrl, state.phase, onBack])
 
   const handleLoad = useCallback(() => {
     if (!urlInput.trim()) return

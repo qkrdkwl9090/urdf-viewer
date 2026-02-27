@@ -2,9 +2,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-5);
+  gap: var(--space-4);
   width: 100%;
 }
+
+/* ---- 헤더 ---- */
 
 .iconContainer {
   display: flex;
@@ -18,47 +20,118 @@
 }
 
 .title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--color-text-primary);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .description {
   font-size: 13px;
   color: var(--color-text-muted);
   line-height: 1.5;
-  max-width: 360px;
+  max-width: 320px;
+  margin-top: calc(-1 * var(--space-2));
 }
 
-.formats {
+/* ---- 업로드 존 (Primary) ---- */
+
+.uploadZone {
   display: flex;
-  gap: var(--space-2);
-  justify-content: center;
-}
-
-.formatBadge {
-  display: inline-block;
-  padding: 2px var(--space-2);
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--color-text-secondary);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-6);
   background-color: var(--color-bg-surface);
-  border-radius: var(--radius-sm);
   border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  transition:
+    background-color var(--transition-normal),
+    border-color var(--transition-normal);
 }
 
-.buttonGroup {
+.uploadZone:hover {
+  background-color: var(--color-accent-muted);
+  border-color: var(--color-accent);
+}
+
+.buttonRow {
   display: flex;
   gap: var(--space-3);
 }
+
+.formatHint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.formatHint code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 6px;
+  background-color: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+}
+
+/* ---- GitHub 행 (Secondary) ---- */
+
+.githubRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  height: 44px;
+  padding: 0 var(--space-4);
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.githubRow:hover {
+  background-color: var(--color-bg-elevated);
+  border-color: var(--color-border-default);
+  color: var(--color-text-primary);
+}
+
+.githubRow:active {
+  background-color: var(--color-bg-overlay);
+}
+
+.githubRowLabel {
+  flex: 1;
+  text-align: left;
+}
+
+.githubRowIcon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast);
+}
+
+.githubRow:hover .githubRowIcon {
+  color: var(--color-text-secondary);
+}
+
+/* ---- 구분선 ---- */
 
 .divider {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   width: 100%;
-  max-width: 360px;
   color: var(--color-text-muted);
   font-size: 12px;
 }
@@ -69,9 +142,91 @@
   background-color: var(--color-border-subtle);
 }
 
-.tip {
+/* ---- 샘플 칩 (Tertiary) ---- */
+
+.sampleList {
+  display: flex;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 2px 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.sampleChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 var(--space-3);
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 16px;
+  cursor: pointer;
+  white-space: nowrap;
   font-size: 12px;
-  color: var(--color-text-muted);
-  max-width: 360px;
-  line-height: 1.5;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--color-text-secondary);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+}
+
+.sampleChip:hover {
+  background-color: var(--color-bg-elevated);
+  border-color: var(--color-border-default);
+  color: var(--color-text-primary);
+  transform: translateY(-1px);
+}
+
+.sampleChip:active {
+  background-color: var(--color-accent-muted);
+  border-color: var(--color-accent);
+  color: var(--color-accent-hover);
+  transform: translateY(0);
+}
+
+/* 타입 컬러 도트 */
+.typeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.typeDotArm { background-color: #60a5fa; }
+.typeDotMobile { background-color: #4ade80; }
+.typeDotQuadruped { background-color: #c084fc; }
+.typeDotRover { background-color: #fbbf24; }
+.typeDotEducational { background-color: #22d3ee; }
+
+/* 로딩 중인 칩 */
+.sampleChipLoading {
+  pointer-events: none;
+  background-color: var(--color-accent-muted);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* 다른 칩 로딩 중일 때 비활성 */
+.sampleChipDisabled {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.chipSpinner {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--color-border-default);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: chipSpin 0.8s linear infinite;
+}
+
+@keyframes chipSpin {
+  to { transform: rotate(360deg); }
 }

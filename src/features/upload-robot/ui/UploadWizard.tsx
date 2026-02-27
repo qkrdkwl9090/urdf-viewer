@@ -5,6 +5,7 @@ import {
   type DragEvent,
 } from 'react'
 import { useRobotStore } from '@entities/robot'
+import type { SampleRobot } from '@shared/constants'
 import { useURDFLoader } from '../lib/useURDFLoader'
 import { WizardStepUrdf } from './WizardStepUrdf'
 import { WizardStepMeshes } from './WizardStepMeshes'
@@ -28,6 +29,10 @@ export function UploadWizard(): ReactNode {
   const [step, setStep] = useState<WizardStep>(1)
   const [mode, setMode] = useState<WizardMode>('upload')
   const [isDragging, setIsDragging] = useState(false)
+  /** 샘플/GitHub에서 전달된 초기 URL */
+  const [githubInitialUrl, setGithubInitialUrl] = useState<string | null>(null)
+  /** 현재 로딩 중인 샘플 ID (카드 상태 표시용) */
+  const [loadingSampleId, setLoadingSampleId] = useState<string | null>(null)
 
   const isLoading = useRobotStore((s) => s.isLoading)
   const error = useRobotStore((s) => s.error)
@@ -103,20 +108,32 @@ export function UploadWizard(): ReactNode {
     setStep(1)
   }, [clearRobot])
 
-  /** GitHub 모드로 전환 */
+  /** GitHub 모드로 전환 (수동) */
   const switchToGitHub = useCallback(() => {
+    setGithubInitialUrl(null)
+    setLoadingSampleId(null)
     setMode('github')
   }, [])
 
   /** 파일 업로드 모드로 복귀 */
   const switchToUpload = useCallback(() => {
+    setGithubInitialUrl(null)
+    setLoadingSampleId(null)
     setMode('upload')
   }, [])
 
   /** GitHub 로딩 후 미해석 메시 발견 → 파일 업로드 Step 2로 전환 */
   const handleGitHubNeedsMeshes = useCallback(() => {
+    setLoadingSampleId(null)
     setMode('upload')
     setStep(2)
+  }, [])
+
+  /** 샘플 로봇 선택 → GitHub 모드로 전환하여 자동 로딩 */
+  const handleSampleSelect = useCallback((sample: SampleRobot) => {
+    setLoadingSampleId(sample.id)
+    setGithubInitialUrl(sample.repoUrl)
+    setMode('github')
   }, [])
 
   // -- 드래그 앤 드롭 핸들러 --
@@ -207,11 +224,15 @@ export function UploadWizard(): ReactNode {
         {isLoading ? (
           <LoadingIndicator />
         ) : mode === 'github' ? (
-          <WizardStepGitHub onBack={switchToUpload} onNeedsMeshes={handleGitHubNeedsMeshes} />
+          <WizardStepGitHub
+            onBack={switchToUpload}
+            onNeedsMeshes={handleGitHubNeedsMeshes}
+            initialUrl={githubInitialUrl ?? undefined}
+          />
         ) : (
           <>
-            {/* 스텝 인디케이터 */}
-            <StepIndicator currentStep={step} />
+            {/* 스텝 인디케이터 — Step 2에서만 표시 */}
+            {step === 2 && <StepIndicator currentStep={step} />}
 
             {/* 스텝 컨텐츠 */}
             {step === 1 && (
@@ -219,6 +240,8 @@ export function UploadWizard(): ReactNode {
                 onFileSelect={handleUrdfFileSelect}
                 onFolderSelect={handleFolderSelect}
                 onSwitchToGitHub={switchToGitHub}
+                onSampleSelect={handleSampleSelect}
+                loadingSampleId={loadingSampleId}
               />
             )}
             {step === 2 && (
