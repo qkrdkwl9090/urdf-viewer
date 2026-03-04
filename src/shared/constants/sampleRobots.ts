@@ -32,14 +32,6 @@ export const SAMPLE_ROBOTS: readonly SampleRobot[] = [
     repoUrl: 'https://github.com/gkjohnson/nasa-urdf-robots',
   },
   {
-    id: 'ur5e',
-    name: 'UR5e',
-    chipLabel: 'UR5e',
-    type: 'arm',
-    license: 'BSD-3-Clause',
-    repoUrl: 'https://github.com/ros-industrial/universal_robot/tree/melodic-devel/ur_description',
-  },
-  {
     id: 'unitree-go2',
     name: 'Unitree Go2',
     chipLabel: 'Go2',
