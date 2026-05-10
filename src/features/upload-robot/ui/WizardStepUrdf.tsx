@@ -5,8 +5,8 @@ import { SAMPLE_ROBOTS } from '@shared/constants'
 import type { SampleRobot, SampleRobotType } from '@shared/constants'
 import styles from './WizardStepUrdf.module.css'
 
-/** Step 1에서는 URDF/XACRO만 허용 */
-const URDF_ACCEPT = '.urdf,.xacro'
+/** Step 1에서는 URDF/XACRO/SDF만 허용 */
+const URDF_ACCEPT = '.urdf,.xacro,.sdf'
 
 /** 타입 → 컬러 도트 CSS 클래스 */
 const TYPE_DOT_CLASS: Record<SampleRobotType, string> = {
@@ -81,7 +81,7 @@ export function WizardStepUrdf({
           </Button>
         </div>
         <p className={styles.formatHint}>
-          Supports <code>.urdf</code> and <code>.xacro</code> files
+          Supports <code>.urdf</code>, <code>.xacro</code> and <code>.sdf</code> files
         </p>
       </div>
 

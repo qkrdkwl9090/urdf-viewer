@@ -1,7 +1,7 @@
 import type { FileMap } from '@shared/types'
 
-/** URDF/XACRO 확장자 판별용 */
-const URDF_EXTENSIONS = ['.urdf', '.xacro'] as const
+/** URDF/XACRO/SDF 확장자 판별용 */
+const URDF_EXTENSIONS = ['.urdf', '.xacro', '.sdf'] as const
 
 interface ProcessedFiles {
   fileMap: FileMap
