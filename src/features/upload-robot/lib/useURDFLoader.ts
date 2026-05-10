@@ -5,8 +5,10 @@ import {
   processDataTransferItems,
   readFileAsText,
   parseURDF,
+  parseSDF,
   expandXacro,
   extractMeshReferences,
+  extractSdfMeshReferences,
   extractXacroIncludes,
 } from '@shared/lib'
 import type {
@@ -15,8 +17,8 @@ import type {
 } from '@shared/types'
 import { extractJointStates, extractLinkStates } from './robotStateExtractors'
 
-/** URDF/XACRO 확장자 판별용 */
-const URDF_EXTENSIONS = ['.urdf', '.xacro'] as const
+/** URDF/XACRO/SDF 확장자 판별용 */
+const URDF_EXTENSIONS = ['.urdf', '.xacro', '.sdf'] as const
 
 /**
  * File 배열에서 UploadedFileInfo 목록을 생성한다.
@@ -41,39 +43,35 @@ function buildUploadedFileInfos(
 }
 
 /**
- * URDF/XACRO 파일의 텍스트 내용을 읽는다.
- * XACRO 확장은 수행하지 않고 원본 텍스트만 반환한다.
+ * URDF/XACRO/SDF 파일의 텍스트 내용을 읽는다.
  */
-async function readUrdfContent(urdfFile: File): Promise<string> {
-  const content = await readFileAsText(urdfFile)
+async function readModelContent(file: File): Promise<string> {
+  const content = await readFileAsText(file)
   if (!content.trim()) {
-    throw new Error('The URDF file is empty.')
+    throw new Error('The description file is empty.')
   }
   return content
 }
 
 interface UseURDFLoaderReturn {
-  /** Step 1: URDF/XACRO 파일 파싱 (로봇 미생성). 모든 메시 해석 시 true 반환 */
+  /** Step 1: URDF/XACRO/SDF 파일 파싱 (로봇 미생성). 모든 메시 해석 시 true 반환 */
   parseUrdfFile: (files: FileList | File[]) => Promise<boolean>
-  /** Step 1 (드래그 앤 드롭): DataTransferItem에서 URDF 파싱 */
+  /** Step 1 (드래그 앤 드롭): DataTransferItem에서 파싱 */
   parseUrdfFromDrop: (items: DataTransferItemList) => Promise<boolean>
   /** Step 2: 메시 파일 추가 후 참조 재평가. 모든 메시 해석 시 true 반환 */
   addMeshFiles: (files: FileList | File[]) => Promise<boolean>
   /** Step 2 (드래그 앤 드롭): 폴더에서 메시 파일 추가 */
   addMeshFilesFromDrop: (items: DataTransferItemList) => Promise<boolean>
-  /** 파싱된 URDF + 현재 fileMap으로 로봇 모델 생성 */
-  buildRobot: () => void
+  /** 파싱된 내용 + 현재 fileMap으로 모델 생성 */
+  buildRobot: () => Promise<void>
   /** 전체 초기화 */
   clearRobot: () => void
 }
 
 /**
  * 2단계 업로드 위자드를 지원하는 파일 업로드/파싱 훅.
- * Step 1에서 URDF를 파싱하고, Step 2에서 메시를 추가한 뒤,
- * buildRobot으로 최종 로봇 모델을 생성한다.
- *
- * XACRO 파일의 경우 include 의존성을 프리스캔하여,
- * 미해석 include가 있으면 위자드 Step 2에서 추가 파일을 요청한다.
+ * Step 1에서 URDF/SDF를 파싱하고, Step 2에서 메시를 추가한 뒤,
+ * buildRobot으로 최종 모델을 생성한다.
  */
 export function useURDFLoader(): UseURDFLoaderReturn {
   const setRobot = useRobotStore((s) => s.setRobot)
@@ -88,25 +86,23 @@ export function useURDFLoader(): UseURDFLoaderReturn {
   const setXacroIncludes = useRobotStore((s) => s.setXacroIncludes)
 
   /**
-   * XACRO 또는 일반 URDF 콘텐츠를 처리한다.
-   * XACRO이면 include를 프리스캔하여 미해석 include가 있으면 스토어에 저장하고 false를 반환.
-   * 모든 include가 해석되면 확장 후 메시 참조까지 추출한다.
-   *
-   * @returns 모든 메시가 해석되었으면 true, 미해석 include가 있으면 false
+   * XACRO, URDF 또는 SDF 콘텐츠를 처리한다.
+   * @returns 모든 메시가 해석되었으면 true
    */
-  async function processUrdfOrXacroContent(
+  async function processDescriptionContent(
     content: string,
     fileMap: FileMap,
-    isXacro: boolean,
+    filename: string,
   ): Promise<boolean> {
+    const isXacro = filename.toLowerCase().endsWith('.xacro')
+    const isSdf = filename.toLowerCase().endsWith('.sdf')
+
     if (isXacro) {
       // XACRO인 경우: include 의존성을 먼저 확인
       const includes = extractXacroIncludes(content, fileMap)
       const hasUnresolved = includes.some((ref) => !ref.resolved)
 
       if (hasUnresolved) {
-        // 미해석 include가 있으면 rawXacroContent와 includes만 저장하고 반환
-        // urdfContent는 설정하지 않음 (확장 전이므로)
         setRawXacroContent(content)
         setXacroIncludes(includes)
         setLoading(false)
@@ -126,9 +122,17 @@ export function useURDFLoader(): UseURDFLoaderReturn {
       return meshRefs.every((ref) => ref.resolved)
     }
 
-    // 일반 URDF인 경우: 바로 메시 참조 추출
     setUrdfContent(content)
 
+    if (isSdf) {
+      // SDF인 경우: 비동기로 메시 참조 추출 (include 탐색 포함)
+      const meshRefs = await extractSdfMeshReferences(content, fileMap)
+      setMeshReferences(meshRefs)
+      setLoading(false)
+      return meshRefs.every((ref) => ref.resolved)
+    }
+
+    // 일반 URDF인 경우
     const meshRefs = extractMeshReferences(content, fileMap)
     setMeshReferences(meshRefs)
     setLoading(false)
@@ -136,11 +140,7 @@ export function useURDFLoader(): UseURDFLoaderReturn {
   }
 
   /**
-   * Step 1: URDF/XACRO 파일을 파싱하고 메시 참조를 추출한다.
-   * 로봇 Three.js 모델은 아직 생성하지 않는다.
-   * XACRO의 경우 include 의존성을 프리스캔하여, 미해석 파일이 있으면
-   * rawXacroContent와 xacroIncludes만 저장하고 false를 반환한다.
-   * @returns 모든 메시가 해석되었으면 true
+   * Step 1: URDF/XACRO/SDF 파일을 파싱하고 메시 참조를 추출한다.
    */
   const parseUrdfFile = useCallback(
     async (files: FileList | File[]): Promise<boolean> => {
@@ -148,29 +148,27 @@ export function useURDFLoader(): UseURDFLoaderReturn {
       setError(null)
 
       try {
-        const { fileMap, urdfFileObject } = await processFiles(files)
+        const { fileMap, urdfFile, urdfFileObject } = await processFiles(files)
 
-        if (!urdfFileObject) {
+        if (!urdfFileObject || !urdfFile) {
           throw new Error(
-            'No URDF or XACRO file found. Please include a .urdf or .xacro file.',
+            'No URDF, XACRO or SDF file found.',
           )
         }
 
-        const content = await readUrdfContent(urdfFileObject)
-        const isXacro = urdfFileObject.name.toLowerCase().endsWith('.xacro')
+        const content = await readModelContent(urdfFileObject)
 
         // 파일 데이터를 스토어에 저장
         const uploadedFileInfos = buildUploadedFileInfos(
           Array.from(files),
           fileMap,
         )
-        setFileData(fileMap, uploadedFileInfos)
+        setFileData(fileMap, uploadedFileInfos, urdfFile)
 
-        // XACRO/URDF 콘텐츠 처리 (include 프리스캔 포함)
-        return await processUrdfOrXacroContent(content, fileMap, isXacro)
+        return await processDescriptionContent(content, fileMap, urdfFile)
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : 'Failed to parse URDF file'
+          err instanceof Error ? err.message : 'Failed to parse file'
         setError(message)
         return false
       }
@@ -187,8 +185,7 @@ export function useURDFLoader(): UseURDFLoaderReturn {
   )
 
   /**
-   * Step 1 (드래그 앤 드롭): DataTransferItemList에서 URDF를 파싱한다.
-   * 폴더 구조를 재귀 탐색하여 모든 파일을 수집한다.
+   * Step 1 (드래그 앤 드롭): DataTransferItemList에서 파싱한다.
    */
   const parseUrdfFromDrop = useCallback(
     async (items: DataTransferItemList): Promise<boolean> => {
@@ -196,17 +193,16 @@ export function useURDFLoader(): UseURDFLoaderReturn {
       setError(null)
 
       try {
-        const { fileMap, urdfFileObject } =
+        const { fileMap, urdfFile, urdfFileObject } =
           await processDataTransferItems(items)
 
-        if (!urdfFileObject) {
+        if (!urdfFileObject || !urdfFile) {
           throw new Error(
-            'No URDF or XACRO file found. Please include a .urdf or .xacro file.',
+            'No URDF, XACRO or SDF file found.',
           )
         }
 
-        const content = await readUrdfContent(urdfFileObject)
-        const isXacro = urdfFileObject.name.toLowerCase().endsWith('.xacro')
+        const content = await readModelContent(urdfFileObject)
 
         // DataTransfer에서는 정확한 파일 크기를 알 수 없음
         const uploadedFileInfos: UploadedFileInfo[] = []
@@ -223,13 +219,12 @@ export function useURDFLoader(): UseURDFLoaderReturn {
           })
         }
 
-        setFileData(fileMap, uploadedFileInfos)
+        setFileData(fileMap, uploadedFileInfos, urdfFile)
 
-        // XACRO/URDF 콘텐츠 처리 (include 프리스캔 포함)
-        return await processUrdfOrXacroContent(content, fileMap, isXacro)
+        return await processDescriptionContent(content, fileMap, urdfFile)
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : 'Failed to parse URDF file'
+          err instanceof Error ? err.message : 'Failed to parse file'
         setError(message)
         return false
       }
@@ -246,10 +241,7 @@ export function useURDFLoader(): UseURDFLoaderReturn {
   )
 
   /**
-   * Step 2: 메시 파일(또는 XACRO include 파일)을 추가하고 참조를 재평가한다.
-   * XACRO가 아직 확장되지 않은 경우(rawXacroContent 존재, urdfContent 없음)
-   * include 재평가 후 모두 해석되면 XACRO 확장까지 시도한다.
-   * @returns 모든 메시가 해석되었으면 true
+   * Step 2: 메시 파일 추가 및 참조 재평가.
    */
   const addMeshFiles = useCallback(
     async (files: FileList | File[]): Promise<boolean> => {
@@ -264,14 +256,15 @@ export function useURDFLoader(): UseURDFLoaderReturn {
         )
         mergeFileMap(newFileMap, newFileInfos)
 
-        // 병합된 fileMap 구성
         const state = useRobotStore.getState()
         const mergedFileMap = new Map(state.fileMap)
         for (const [key, value] of newFileMap) {
           mergedFileMap.set(key, value)
         }
 
-        // XACRO가 아직 확장되지 않은 경우 (include 미해석 상태)
+        const filename = state.primaryDescriptionPath || ''
+
+        // XACRO 미확장 상태
         if (state.rawXacroContent && !state.urdfContent) {
           const includes = extractXacroIncludes(
             state.rawXacroContent,
@@ -281,12 +274,10 @@ export function useURDFLoader(): UseURDFLoaderReturn {
 
           const hasUnresolved = includes.some((ref) => !ref.resolved)
           if (hasUnresolved) {
-            // 아직 미해석 include가 남아있음
             setLoading(false)
             return false
           }
 
-          // 모든 include 해석 완료 -> XACRO 확장 시도
           const expandedContent = await expandXacro(
             state.rawXacroContent,
             mergedFileMap,
@@ -299,19 +290,21 @@ export function useURDFLoader(): UseURDFLoaderReturn {
           return meshRefs.every((ref) => ref.resolved)
         }
 
-        // urdfContent가 이미 존재하는 경우: 메시 참조만 재평가
         const currentUrdfContent = state.urdfContent
         if (!currentUrdfContent) {
           setLoading(false)
           return false
         }
 
-        const meshRefs = extractMeshReferences(
-          currentUrdfContent,
-          mergedFileMap,
-        )
-        setMeshReferences(meshRefs)
+        // SDF 또는 URDF 재평가
+        let meshRefs;
+        if (filename.toLowerCase().endsWith('.sdf')) {
+          meshRefs = await extractSdfMeshReferences(currentUrdfContent, mergedFileMap)
+        } else {
+          meshRefs = extractMeshReferences(currentUrdfContent, mergedFileMap)
+        }
 
+        setMeshReferences(meshRefs)
         setLoading(false)
         return meshRefs.every((ref) => ref.resolved)
       } catch (err: unknown) {
@@ -332,9 +325,7 @@ export function useURDFLoader(): UseURDFLoaderReturn {
   )
 
   /**
-   * Step 2 (드래그 앤 드롭): DataTransferItemList에서 메시 파일을 추가한다.
-   * 폴더 드롭 시 재귀 탐색하여 메시 파일을 수집한다.
-   * XACRO include 의존성 재평가 로직도 포함한다.
+   * Step 2 (드래그 앤 드롭): 메시 파일 추가.
    */
   const addMeshFilesFromDrop = useCallback(
     async (items: DataTransferItemList): Promise<boolean> => {
@@ -343,8 +334,6 @@ export function useURDFLoader(): UseURDFLoaderReturn {
 
       try {
         const { fileMap: newFileMap } = await processDataTransferItems(items)
-
-        // DataTransfer에서는 File 객체에 접근 불가하므로 fileMap 기반으로 info 생성
         const newFileInfos: UploadedFileInfo[] = []
         for (const [path, blobUrl] of newFileMap) {
           const lowerPath = path.toLowerCase()
@@ -361,14 +350,14 @@ export function useURDFLoader(): UseURDFLoaderReturn {
 
         mergeFileMap(newFileMap, newFileInfos)
 
-        // 병합된 fileMap 구성
         const state = useRobotStore.getState()
         const mergedFileMap = new Map(state.fileMap)
         for (const [key, value] of newFileMap) {
           mergedFileMap.set(key, value)
         }
 
-        // XACRO가 아직 확장되지 않은 경우 (include 미해석 상태)
+        const filename = state.primaryDescriptionPath || ''
+
         if (state.rawXacroContent && !state.urdfContent) {
           const includes = extractXacroIncludes(
             state.rawXacroContent,
@@ -378,12 +367,10 @@ export function useURDFLoader(): UseURDFLoaderReturn {
 
           const hasUnresolved = includes.some((ref) => !ref.resolved)
           if (hasUnresolved) {
-            // 아직 미해석 include가 남아있음
             setLoading(false)
             return false
           }
 
-          // 모든 include 해석 완료 -> XACRO 확장 시도
           const expandedContent = await expandXacro(
             state.rawXacroContent,
             mergedFileMap,
@@ -396,19 +383,20 @@ export function useURDFLoader(): UseURDFLoaderReturn {
           return meshRefs.every((ref) => ref.resolved)
         }
 
-        // urdfContent가 이미 존재하는 경우: 메시 참조만 재평가
         const currentUrdfContent = state.urdfContent
         if (!currentUrdfContent) {
           setLoading(false)
           return false
         }
 
-        const meshRefs = extractMeshReferences(
-          currentUrdfContent,
-          mergedFileMap,
-        )
-        setMeshReferences(meshRefs)
+        let meshRefs;
+        if (filename.toLowerCase().endsWith('.sdf')) {
+          meshRefs = await extractSdfMeshReferences(currentUrdfContent, mergedFileMap)
+        } else {
+          meshRefs = extractMeshReferences(currentUrdfContent, mergedFileMap)
+        }
 
+        setMeshReferences(meshRefs)
         setLoading(false)
         return meshRefs.every((ref) => ref.resolved)
       } catch (err: unknown) {
@@ -429,12 +417,11 @@ export function useURDFLoader(): UseURDFLoaderReturn {
   )
 
   /**
-   * 파싱된 URDF 텍스트와 현재 fileMap으로 Three.js 로봇 모델을 생성한다.
-   * Step 2 완료 후 또는 모든 메시가 해석된 경우 호출한다.
+   * 모델 생성.
    */
-  const buildRobot = useCallback(() => {
+  const buildRobot = useCallback(async () => {
     const state = useRobotStore.getState()
-    const { urdfContent, fileMap } = state
+    const { urdfContent, fileMap, primaryDescriptionPath } = state
 
     if (!urdfContent) return
 
@@ -442,13 +429,21 @@ export function useURDFLoader(): UseURDFLoaderReturn {
     setError(null)
 
     try {
-      const robot = parseURDF(urdfContent, fileMap)
+      const isSdf = primaryDescriptionPath?.toLowerCase().endsWith('.sdf')
+
+      let robot;
+      if (isSdf) {
+        robot = await parseSDF(urdfContent, fileMap)
+      } else {
+        robot = parseURDF(urdfContent, fileMap)
+      }
+
       const joints = extractJointStates(robot)
       const links = extractLinkStates(robot)
-      setRobot(robot.robotName || 'Unnamed Robot', robot, joints, links)
+      setRobot(robot.robotName || 'Unnamed Model', robot, joints, links)
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : 'Failed to build robot model'
+        err instanceof Error ? err.message : 'Failed to build model'
       setError(message)
     }
   }, [setRobot, setLoading, setError])

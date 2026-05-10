@@ -2,8 +2,10 @@ import { useState, useCallback } from 'react'
 import { useRobotStore } from '@entities/robot'
 import {
   parseURDF,
+  parseSDF,
   expandXacro,
   extractMeshReferences,
+  extractSdfMeshReferences,
   extractXacroIncludes,
   parseGitHubUrl,
   fetchDefaultBranch,
@@ -55,8 +57,7 @@ const INITIAL_STATE: GitHubLoaderState = {
 }
 
 /**
- * GitHub에서 URDF를 fetch하고 로봇을 빌드하는 핵심 로직.
- * useRobotStore.getState()를 직접 사용하여 stale closure를 방지한다.
+ * GitHub에서 URDF/SDF를 fetch하고 모델을 빌드하는 핵심 로직.
  */
 async function loadUrdfFromGitHub(
   info: GitHubRepoInfo,
@@ -69,14 +70,10 @@ async function loadUrdfFromGitHub(
   store.setError(null)
 
   try {
-    // 1. URDF 텍스트 fetch
     const rawUrl = buildRawUrl(info, urdfEntry.path)
     const content = await fetchFileAsText(rawUrl)
-
-    // 2. 전체 tree로 FileMap 구성 (path → raw URL)
     const fileMap: FileMap = buildFileMapFromTree(info, tree)
 
-    // 스토어에 파일 데이터 저장
     const uploadedFiles = tree
       .filter((e) => e.type === 'blob')
       .map((e) => ({
@@ -85,20 +82,19 @@ async function loadUrdfFromGitHub(
         size: e.size ?? 0,
         isRobotDescription:
           e.path.toLowerCase().endsWith('.urdf') ||
-          e.path.toLowerCase().endsWith('.xacro'),
+          e.path.toLowerCase().endsWith('.xacro') ||
+          e.path.toLowerCase().endsWith('.sdf'),
       }))
-    useRobotStore.getState().setFileData(fileMap, uploadedFiles)
+    useRobotStore.getState().setFileData(fileMap, uploadedFiles, urdfEntry.path)
 
-    // 3. XACRO 처리
     const isXacro = urdfEntry.path.toLowerCase().endsWith('.xacro')
+    const isSdf = urdfEntry.path.toLowerCase().endsWith('.sdf')
     let urdfContent: string
 
     if (isXacro) {
       useRobotStore.getState().setRawXacroContent(content)
       const includes = extractXacroIncludes(content, fileMap)
       useRobotStore.getState().setXacroIncludes(includes)
-
-      // GitHub에서는 전체 파일이 FileMap에 있으므로 대부분 해석됨
       urdfContent = await expandXacro(content, fileMap)
     } else {
       urdfContent = content
@@ -107,13 +103,17 @@ async function loadUrdfFromGitHub(
     useRobotStore.getState().setUrdfContent(urdfContent)
 
     // 메시 참조 추출
-    const meshRefs = extractMeshReferences(urdfContent, fileMap)
+    let meshRefs;
+    if (isSdf) {
+      meshRefs = await extractSdfMeshReferences(urdfContent, fileMap)
+    } else {
+      meshRefs = extractMeshReferences(urdfContent, fileMap)
+    }
     useRobotStore.getState().setMeshReferences(meshRefs)
 
     const allResolved = meshRefs.every((ref) => ref.resolved)
 
     if (!allResolved) {
-      // 미해석 메시 존재 → Step 2에서 사용자가 추가 파일 업로드
       useRobotStore.getState().setLoading(false)
       setState((prev) => ({
         ...prev,
@@ -123,12 +123,18 @@ async function loadUrdfFromGitHub(
       return
     }
 
-    // 4. 모든 메시 해석됨 → 로봇 모델 빌드
-    const robot = parseURDF(urdfContent, fileMap)
+    // 모델 빌드
+    let robot;
+    if (isSdf) {
+      robot = await parseSDF(urdfContent, fileMap)
+    } else {
+      robot = parseURDF(urdfContent, fileMap)
+    }
+
     const joints = extractJointStates(robot)
     const links = extractLinkStates(robot)
     useRobotStore.getState().setRobot(
-      robot.robotName || 'Unnamed Robot',
+      robot.robotName || 'Unnamed Model',
       robot,
       joints,
       links,
@@ -141,7 +147,7 @@ async function loadUrdfFromGitHub(
     }))
   } catch (err: unknown) {
     const message =
-      err instanceof Error ? err.message : 'Failed to build robot model.'
+      err instanceof Error ? err.message : 'Failed to build model.'
     useRobotStore.getState().setError(message)
     setState((prev) => ({
       ...prev,

@@ -43,6 +43,8 @@ export function buildTree(
   function walkChildren(obj: Object3D): TreeNode[] {
     const nodes: TreeNode[] = []
 
+    if (!obj.children) return nodes
+
     for (const child of obj.children) {
       if (isURDFJoint(child)) {
         // 부모 링크: Three.js 계층에서 Joint의 parent

@@ -27,6 +27,8 @@ interface RobotState {
   fileMap: FileMap
   /** 업로드된 파일 목록 */
   uploadedFiles: UploadedFileInfo[]
+  /** 주 기술 파일(URDF/SDF) 경로 */
+  primaryDescriptionPath: string | null
   /** URDF에서 참조하는 모든 메시의 해석 상태 */
   meshReferences: MeshReference[]
   /** URDF 원본 텍스트 (재파싱용) */
@@ -58,7 +60,7 @@ interface RobotActions {
   /** 에러 메시지 설정 */
   setError: (e: string | null) => void
   /** 파일 맵 및 업로드 파일 정보 설정 */
-  setFileData: (fileMap: FileMap, uploadedFiles: UploadedFileInfo[]) => void
+  setFileData: (fileMap: FileMap, uploadedFiles: UploadedFileInfo[], primaryPath?: string | null) => void
   /** 기존 FileMap에 새 파일 병합 */
   mergeFileMap: (newFiles: FileMap, newFileInfos: UploadedFileInfo[]) => void
   /** 메시 참조 목록 설정 */
@@ -82,6 +84,7 @@ const initialState: RobotState = {
   error: null,
   fileMap: new Map(),
   uploadedFiles: [],
+  primaryDescriptionPath: null,
   meshReferences: [],
   urdfContent: null,
   rawXacroContent: null,
@@ -165,8 +168,8 @@ export const useRobotStore = create<RobotState & RobotActions>()((set) => ({
 
   setError: (e) => set({ error: e, isLoading: false }),
 
-  setFileData: (fileMap, uploadedFiles) =>
-    set({ fileMap, uploadedFiles }),
+  setFileData: (fileMap, uploadedFiles, primaryDescriptionPath = null) =>
+    set({ fileMap, uploadedFiles, primaryDescriptionPath }),
 
   mergeFileMap: (newFiles, newFileInfos) =>
     set((state) => {

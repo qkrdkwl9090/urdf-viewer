@@ -56,7 +56,7 @@ export function UploadWizard(): ReactNode {
     async (files: FileList) => {
       const allResolved = await parseUrdfFile(files)
       if (allResolved) {
-        buildRobot()
+        await buildRobot()
       } else {
         setStep(2)
       }
@@ -72,7 +72,7 @@ export function UploadWizard(): ReactNode {
     async (files: FileList) => {
       const allResolved = await parseUrdfFile(files)
       if (allResolved) {
-        buildRobot()
+        await buildRobot()
       } else {
         setStep(2)
       }
@@ -174,7 +174,7 @@ export function UploadWizard(): ReactNode {
         if (firstEntry) {
           const allResolved = await parseUrdfFromDrop(items)
           if (allResolved) {
-            buildRobot()
+            await buildRobot()
           } else {
             setStep(2)
           }
@@ -185,7 +185,7 @@ export function UploadWizard(): ReactNode {
         if (files.length > 0) {
           const allResolved = await parseUrdfFile(files)
           if (allResolved) {
-            buildRobot()
+            await buildRobot()
           } else {
             setStep(2)
           }

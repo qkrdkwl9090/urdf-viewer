@@ -142,13 +142,13 @@ export async function fetchFileAsText(url: string): Promise<string> {
 }
 
 /**
- * 트리 엔트리 목록에서 URDF/XACRO 파일을 찾는다.
+ * 트리 엔트리 목록에서 URDF/XACRO/SDF 파일을 찾는다.
  */
 export function findUrdfFiles(entries: GitHubTreeEntry[]): GitHubTreeEntry[] {
   return entries.filter((entry) => {
     if (entry.type !== 'blob') return false
     const lower = entry.path.toLowerCase()
-    return lower.endsWith('.urdf') || lower.endsWith('.xacro')
+    return lower.endsWith('.urdf') || lower.endsWith('.xacro') || lower.endsWith('.sdf')
   })
 }
 
