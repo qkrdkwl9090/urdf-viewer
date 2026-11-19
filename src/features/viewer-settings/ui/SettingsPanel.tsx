@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode } from 'react'
+import { useCallback, useId, type ReactNode } from 'react'
 import { RotateCcw, Home, Code } from 'lucide-react'
 import { useViewerStore, useRobotStore, useUIStore } from '@entities/robot'
 import { Button, Toggle, Slider } from '@shared/ui'
@@ -9,6 +9,7 @@ import styles from './SettingsPanel.module.css'
  * 그리드/축 토글과 카메라/조인트 리셋 버튼을 제공한다.
  */
 export function SettingsPanel(): ReactNode {
+  const geometryLabelId = useId()
   const showGrid = useViewerStore((s) => s.showGrid)
   const showAxes = useViewerStore((s) => s.showAxes)
   const toggleGrid = useViewerStore((s) => s.toggleGrid)
@@ -98,24 +99,28 @@ export function SettingsPanel(): ReactNode {
             label=""
           />
         </div>
-        <label className={styles.toggleRow}>
-          <span className={styles.toggleLabel}>Show Visual Geometry</span>
-          <input
-            className={styles.geometryCheckbox}
-            type="checkbox"
+        <div className={styles.toggleRow}>
+          <span id={`${geometryLabelId}-visual`} className={styles.toggleLabel}>
+            Show Visual Geometry
+          </span>
+          <Toggle
             checked={showVisualGeometry}
-            onChange={(event) => setShowVisualGeometry(event.currentTarget.checked)}
+            onChange={setShowVisualGeometry}
+            label=""
+            aria-labelledby={`${geometryLabelId}-visual`}
           />
-        </label>
-        <label className={styles.toggleRow}>
-          <span className={styles.toggleLabel}>Show Collision Geometry</span>
-          <input
-            className={styles.geometryCheckbox}
-            type="checkbox"
+        </div>
+        <div className={styles.toggleRow}>
+          <span id={`${geometryLabelId}-collision`} className={styles.toggleLabel}>
+            Show Collision Geometry
+          </span>
+          <Toggle
             checked={showCollisionGeometry}
-            onChange={(event) => setShowCollisionGeometry(event.currentTarget.checked)}
+            onChange={setShowCollisionGeometry}
+            label=""
+            aria-labelledby={`${geometryLabelId}-collision`}
           />
-        </label>
+        </div>
         <div className={styles.sliderRow}>
           <Slider
             label="Light Intensity"

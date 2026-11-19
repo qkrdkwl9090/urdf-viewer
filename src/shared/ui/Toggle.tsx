@@ -5,9 +5,12 @@ interface ToggleProps {
   checked: boolean
   onChange: (checked: boolean) => void
   label: string
+  'aria-labelledby'?: string
 }
 
-export function Toggle({ checked, onChange, label }: ToggleProps): ReactNode {
+export function Toggle({
+  checked, onChange, label, 'aria-labelledby': labelledBy,
+}: ToggleProps): ReactNode {
   const id = useId()
 
   const handleChange = useCallback(() => {
@@ -27,6 +30,7 @@ export function Toggle({ checked, onChange, label }: ToggleProps): ReactNode {
       <input
         id={id}
         type="checkbox"
+        aria-labelledby={labelledBy}
         className={styles.hiddenInput}
         checked={checked}
         onChange={handleChange}
