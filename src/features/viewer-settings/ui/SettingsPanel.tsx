@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode } from 'react'
+import { useCallback, useId, type ReactNode } from 'react'
 import { RotateCcw, Home, Code } from 'lucide-react'
 import { useViewerStore, useRobotStore, useUIStore } from '@entities/robot'
 import { Button, Toggle, Slider } from '@shared/ui'
@@ -9,10 +9,15 @@ import styles from './SettingsPanel.module.css'
  * 그리드/축 토글과 카메라/조인트 리셋 버튼을 제공한다.
  */
 export function SettingsPanel(): ReactNode {
+  const geometryLabelId = useId()
   const showGrid = useViewerStore((s) => s.showGrid)
   const showAxes = useViewerStore((s) => s.showAxes)
   const toggleGrid = useViewerStore((s) => s.toggleGrid)
   const toggleAxes = useViewerStore((s) => s.toggleAxes)
+  const showVisualGeometry = useViewerStore((s) => s.showVisualGeometry)
+  const showCollisionGeometry = useViewerStore((s) => s.showCollisionGeometry)
+  const setShowVisualGeometry = useViewerStore((s) => s.setShowVisualGeometry)
+  const setShowCollisionGeometry = useViewerStore((s) => s.setShowCollisionGeometry)
   const requestCameraReset = useViewerStore((s) => s.requestCameraReset)
   const resetJoints = useRobotStore((s) => s.resetJoints)
   const hasRobot = useRobotStore((s) => s.robotName !== null)
@@ -92,6 +97,28 @@ export function SettingsPanel(): ReactNode {
             checked={ignoreLimits}
             onChange={handleIgnoreLimitsToggle}
             label=""
+          />
+        </div>
+        <div className={styles.toggleRow}>
+          <span id={`${geometryLabelId}-visual`} className={styles.toggleLabel}>
+            Show Visual Geometry
+          </span>
+          <Toggle
+            checked={showVisualGeometry}
+            onChange={setShowVisualGeometry}
+            label=""
+            aria-labelledby={`${geometryLabelId}-visual`}
+          />
+        </div>
+        <div className={styles.toggleRow}>
+          <span id={`${geometryLabelId}-collision`} className={styles.toggleLabel}>
+            Show Collision Geometry
+          </span>
+          <Toggle
+            checked={showCollisionGeometry}
+            onChange={setShowCollisionGeometry}
+            label=""
+            aria-labelledby={`${geometryLabelId}-collision`}
           />
         </div>
         <div className={styles.sliderRow}>

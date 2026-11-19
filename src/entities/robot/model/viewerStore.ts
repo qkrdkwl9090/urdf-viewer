@@ -10,6 +10,8 @@ interface ViewerState extends ViewerSettings {
 interface ViewerActions {
   toggleGrid: () => void
   toggleAxes: () => void
+  setShowVisualGeometry: (visible: boolean) => void
+  setShowCollisionGeometry: (visible: boolean) => void
   setBackgroundColor: (color: string) => void
   /** 조명 밝기 배율 설정 */
   setLightIntensity: (v: number) => void
@@ -26,6 +28,10 @@ export const useViewerStore = create<ViewerState & ViewerActions>()((set) => ({
   toggleGrid: () => set((state) => ({ showGrid: !state.showGrid })),
 
   toggleAxes: () => set((state) => ({ showAxes: !state.showAxes })),
+
+  setShowVisualGeometry: (visible) => set({ showVisualGeometry: visible }),
+
+  setShowCollisionGeometry: (visible) => set({ showCollisionGeometry: visible }),
 
   setBackgroundColor: (color) => set({ backgroundColor: color }),
 
