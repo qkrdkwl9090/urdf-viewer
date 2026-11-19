@@ -13,6 +13,10 @@ export function SettingsPanel(): ReactNode {
   const showAxes = useViewerStore((s) => s.showAxes)
   const toggleGrid = useViewerStore((s) => s.toggleGrid)
   const toggleAxes = useViewerStore((s) => s.toggleAxes)
+  const showVisualGeometry = useViewerStore((s) => s.showVisualGeometry)
+  const showCollisionGeometry = useViewerStore((s) => s.showCollisionGeometry)
+  const setShowVisualGeometry = useViewerStore((s) => s.setShowVisualGeometry)
+  const setShowCollisionGeometry = useViewerStore((s) => s.setShowCollisionGeometry)
   const requestCameraReset = useViewerStore((s) => s.requestCameraReset)
   const resetJoints = useRobotStore((s) => s.resetJoints)
   const hasRobot = useRobotStore((s) => s.robotName !== null)
@@ -94,6 +98,24 @@ export function SettingsPanel(): ReactNode {
             label=""
           />
         </div>
+        <label className={styles.toggleRow}>
+          <span className={styles.toggleLabel}>Show Visual Geometry</span>
+          <input
+            className={styles.geometryCheckbox}
+            type="checkbox"
+            checked={showVisualGeometry}
+            onChange={(event) => setShowVisualGeometry(event.currentTarget.checked)}
+          />
+        </label>
+        <label className={styles.toggleRow}>
+          <span className={styles.toggleLabel}>Show Collision Geometry</span>
+          <input
+            className={styles.geometryCheckbox}
+            type="checkbox"
+            checked={showCollisionGeometry}
+            onChange={(event) => setShowCollisionGeometry(event.currentTarget.checked)}
+          />
+        </label>
         <div className={styles.sliderRow}>
           <Slider
             label="Light Intensity"

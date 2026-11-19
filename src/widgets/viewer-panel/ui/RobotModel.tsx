@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useCallback, useRef, type ReactNode } from 'react'
 import { useThree, type ThreeEvent } from '@react-three/fiber'
 import { Box3, Vector3, Mesh, MeshStandardMaterial, MeshPhongMaterial, Color } from 'three'
 import type { Object3D, Material } from 'three'
@@ -7,6 +7,25 @@ import type { URDFRobot, URDFLink } from '@shared/types'
 
 const HIGHLIGHT_COLOR = new Color(0x3b82f6)
 const HIGHLIGHT_INTENSITY = 0.35
+
+function useGeometryVisibilitySync(robot: URDFRobot | null): void {
+  const showVisualGeometry = useViewerStore((s) => s.showVisualGeometry)
+  const showCollisionGeometry = useViewerStore((s) => s.showCollisionGeometry)
+  const { invalidate } = useThree()
+
+  useLayoutEffect(() => {
+    if (!robot) return
+
+    robot.traverse((object) => {
+      if ('isURDFVisual' in object && object.isURDFVisual) {
+        object.visible = showVisualGeometry
+      } else if ('isURDFCollider' in object && object.isURDFCollider) {
+        object.visible = showCollisionGeometry
+      }
+    })
+    invalidate()
+  }, [robot, showVisualGeometry, showCollisionGeometry, invalidate])
+}
 
 /**
  * 카메라를 로봇의 바운딩 박스에 맞춰 자동 위치시키는 함수를 반환한다.
@@ -19,7 +38,11 @@ function useAutoFrame(robot: URDFRobot | null): () => void {
     if (!robot) return
 
     // 바운딩 박스 계산
-    const box = new Box3().setFromObject(robot)
+    const box = new Box3()
+    robot.updateWorldMatrix(true, false)
+    robot.traverseVisible((object) => {
+      if (object instanceof Mesh) box.expandByObject(object)
+    })
 
     // 빈 바운딩 박스 방어 (메시가 없는 경우)
     if (box.isEmpty()) return
@@ -106,13 +129,15 @@ function useIgnoreLimitsSync(robot: URDFRobot | null): void {
 /** 클릭된 메시에서 부모 URDFLink를 찾아 올라간다 */
 function findParentLink(obj: Object3D): URDFLink | null {
   let current: Object3D | null = obj
+  let link: URDFLink | null = null
   while (current) {
-    if ('isURDFLink' in current && (current as unknown as { isURDFLink: boolean }).isURDFLink) {
-      return current as unknown as URDFLink
+    if (!current.visible) return null
+    if (!link && 'isURDFLink' in current && current.isURDFLink) {
+      link = current as URDFLink
     }
     current = current.parent
   }
-  return null
+  return link
 }
 
 interface MaterialBackup {
@@ -201,14 +226,16 @@ export function RobotModel(): ReactNode {
   const robot = useRobotStore((s) => s.robot)
   const selectItem = useUIStore((s) => s.selectItem)
 
+  useGeometryVisibilitySync(robot)
+
+  // 링크 가시성 동기화
+  useLinkVisibilitySync(robot)
+
   // 로봇 로드 시 카메라 자동 프레이밍
   const frameCamera = useAutoFrame(robot)
 
   // 카메라 리셋 요청 처리
   useCameraReset(frameCamera)
-
-  // 링크 가시성 동기화
-  useLinkVisibilitySync(robot)
 
   // 조인트 리밋 무시 플래그 동기화
   useIgnoreLimitsSync(robot)
@@ -219,9 +246,9 @@ export function RobotModel(): ReactNode {
   // 3D 메시 클릭 → 부모 링크 선택
   const handleClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
-      event.stopPropagation()
       const link = findParentLink(event.object)
       if (link) {
+        event.stopPropagation()
         selectItem({ name: link.urdfName, kind: 'link' })
         // 조인트 탭으로 전환 + 패널 열기
         const { setActiveTab, openPanel } = useUIStore.getState()

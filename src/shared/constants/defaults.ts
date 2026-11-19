@@ -4,6 +4,8 @@ import type { ViewerSettings } from '@shared/types'
 export const DEFAULT_VIEWER_SETTINGS: ViewerSettings = {
   showGrid: true,
   showAxes: true,
+  showVisualGeometry: true,
+  showCollisionGeometry: false,
   backgroundColor: '#0a0a0b',
   lightIntensity: 0,
 } as const

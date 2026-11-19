@@ -79,7 +79,7 @@ export function parseURDF(urdfContent: string, fileMap: FileMap): URDFRobot {
   loader.packages = ''
   loader.workingPath = ''
   loader.parseVisual = true
-  loader.parseCollision = false
+  loader.parseCollision = true
 
   // 커스텀 메시 로딩 콜백
   loader.loadMeshCb = (url, _manager, onLoad) => {
